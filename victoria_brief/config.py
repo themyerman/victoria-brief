@@ -11,7 +11,7 @@ def load_config(path: "Union[str, Path]" = "feeds.yaml") -> "tuple[dict, list, d
     with open(path) as f:
         cfg = yaml.safe_load(f)
     return (
-        cfg.get("feeds", {}),
-        cfg.get("stocks", []),
-        cfg.get("web_search_queries", {}),
+        cfg.get("sources", []),
+        [],   # reserved
+        {},   # reserved
     )

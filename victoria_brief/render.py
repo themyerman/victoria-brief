@@ -1,20 +1,7 @@
 from __future__ import annotations
+
 from datetime import datetime
 from typing import Optional
-
-
-CATEGORY_LABELS = {
-    "tech_startups":    "Tech & Startups",
-    "jobs":             "Jobs",
-    "cultural_events":  "Cultural Events",
-    "first_nations":    "First Nations",
-    "bc_legislature":   "BC Legislature",
-    "arts_funding":     "Arts Funding",
-    "uvic_camosun":     "UVic & Camosun",
-    "bc_ferries":       "BC Ferries",
-    "real_estate":      "Housing & Real Estate",
-    "general_victoria": "General Victoria",
-}
 
 
 def _sentiment_bar(sentiment: dict) -> str:
@@ -23,61 +10,79 @@ def _sentiment_bar(sentiment: dict) -> str:
     neg = sentiment["negative_pct"]
     overall = sentiment["overall"]
     score = sentiment["score"]
-    label_color = {"positive": "#2a7a2a", "neutral": "#888", "negative": "#c0392b"}[overall]
-    return f"""
-<div class="sentiment">
-  <span class="sentiment-label" style="color:{label_color}">
-    Overall tone: <strong>{overall}</strong> (score: {score:+.3f})
-  </span>
+    color = {"positive": "#2a7a2a", "neutral": "#888", "negative": "#c0392b"}[overall]
+    return f"""<div class="sentiment">
+  <span style="color:{color}">Overall tone: <strong>{overall}</strong> ({score:+.3f})</span>
   <div class="sentiment-bar">
     <div class="bar-pos" style="width:{pos}%" title="Positive {pos}%"></div>
     <div class="bar-neu" style="width:{neu}%" title="Neutral {neu}%"></div>
     <div class="bar-neg" style="width:{neg}%" title="Negative {neg}%"></div>
   </div>
   <div class="sentiment-pcts">
-    <span style="color:#2a7a2a">&#9632; {pos}% positive</span>
-    &nbsp;&nbsp;
-    <span style="color:#888">&#9632; {neu}% neutral</span>
-    &nbsp;&nbsp;
+    <span style="color:#2a7a2a">&#9632; {pos}% positive</span>&nbsp;&nbsp;
+    <span style="color:#888">&#9632; {neu}% neutral</span>&nbsp;&nbsp;
     <span style="color:#c0392b">&#9632; {neg}% negative</span>
   </div>
 </div>"""
 
 
-def _keywords_block(keywords: list[str]) -> str:
-    tags = "".join(f'<span class="kw">{k}</span>' for k in keywords)
-    return f'<div class="keywords"><strong>Today\'s keywords:</strong> {tags}</div>'
+def _major_stories_section(stories: list[dict]) -> str:
+    if not stories:
+        return ""
+    items_html = []
+    for s in stories:
+        title = s.get("title", "")
+        link = s.get("link", "")
+        summary = s.get("summary", "").strip()
+        source_count = s.get("source_count", 0)
+        sources = ", ".join(s.get("sources", []))
+        anchor = f'<a href="{link}">{title}</a>' if link else title
+        items_html.append(
+            f"<li>"
+            f"<strong>{anchor}</strong>"
+            f'<span class="source-badge">{source_count} sources</span>'
+            f"<p>{summary}</p>"
+            f'<p class="sources-list">Covered by: {sources}</p>'
+            f"</li>"
+        )
+    return f"""<section class="major">
+  <h2>&#9733; Major Stories</h2>
+  <ul>{"".join(items_html)}</ul>
+</section>"""
+
+
+def _source_section(name: str, items: list[dict], top_n: int = 3) -> str:
+    if not items:
+        return ""
+    items_html = []
+    for item in items[:top_n]:
+        title = item.get("title", "(no title)")
+        link = item.get("link", "")
+        summary = item.get("summary", "").strip()
+        anchor = f'<a href="{link}">{title}</a>' if link else title
+        snippet = f"<p>{summary}</p>" if summary else ""
+        items_html.append(f"<li><strong>{anchor}</strong>{snippet}</li>")
+    return f"""<section>
+  <h2>{name}</h2>
+  <ul>{"".join(items_html)}</ul>
+</section>"""
 
 
 def to_html(
-    rss_items: dict,
-    supplemental: dict,
+    sources: dict[str, list[dict]],
+    major_stories: Optional[list[dict]] = None,
     sentiment: Optional[dict] = None,
+    top_n: int = 3,
 ) -> str:
     today = datetime.now().strftime("%A, %B %-d, %Y")
-    sections = []
 
-    for cat, label in CATEGORY_LABELS.items():
-        combined = rss_items.get(cat, []) + supplemental.get(cat, [])
-        if not combined:
-            continue
-
-        items_html = []
-        for item in combined[:15]:
-            title = item.get("title", "(no title)")
-            link = item.get("link", "")
-            body = (item.get("summary") or item.get("snippet", "")).strip()
-            anchor = f'<a href="{link}">{title}</a>' if link else title
-            snippet = f"<p>{body}</p>" if body else ""
-            items_html.append(f"<li><strong>{anchor}</strong>{snippet}</li>")
-
-        sections.append(f"""
-<section>
-  <h2>{label}</h2>
-  <ul>{"".join(items_html)}</ul>
-</section>""")
-
-    nlp_header = _sentiment_bar(sentiment) if sentiment else ""
+    header = _sentiment_bar(sentiment) if sentiment else ""
+    major = _major_stories_section(major_stories or [])
+    sections = "".join(
+        _source_section(name, items, top_n)
+        for name, items in sources.items()
+        if items
+    )
 
     return f"""<!DOCTYPE html>
 <html lang="en"><head>
@@ -85,31 +90,31 @@ def to_html(
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Victoria Morning Brief — {today}</title>
 <style>
-  body {{ font-family: Georgia, serif; max-width: 720px; margin: 40px auto; padding: 0 20px; color: #222; line-height: 1.6; }}
-  h1 {{ font-size: 1.6em; border-bottom: 2px solid #333; padding-bottom: 10px; }}
-  h2 {{ font-size: 1.1em; margin-top: 2em; color: #444; border-bottom: 1px solid #ddd; padding-bottom: 4px; }}
+  body {{ font-family: Georgia, serif; max-width: 740px; margin: 40px auto; padding: 0 20px; color: #222; line-height: 1.6; }}
+  h1 {{ font-size: 1.6em; border-bottom: 2px solid #333; padding-bottom: 10px; margin-bottom: 4px; }}
+  h2 {{ font-size: 1.05em; margin-top: 2em; color: #444; border-bottom: 1px solid #ddd; padding-bottom: 4px; text-transform: uppercase; letter-spacing: 0.04em; }}
+  section.major h2 {{ color: #8b0000; border-bottom-color: #8b0000; }}
+  section.major li {{ margin-bottom: 1.4em; }}
   ul {{ padding-left: 1.2em; }}
-  li {{ margin-bottom: 1em; }}
-  li p {{ margin: 4px 0 0; font-size: 0.9em; color: #555; }}
-  a {{ color: #1a6b9a; }}
-  table {{ border-collapse: collapse; width: 100%; }}
-  th, td {{ text-align: left; padding: 6px 12px; border-bottom: 1px solid #eee; }}
-  th {{ background: #f5f5f5; font-size: 0.85em; }}
-  .meta {{ color: #888; font-size: 0.85em; margin-top: 2em; border-top: 1px solid #eee; padding-top: 1em; }}
-  .sentiment {{ background: #f9f9f9; border: 1px solid #e0e0e0; border-radius: 6px; padding: 12px 16px; margin: 1em 0; }}
-  .sentiment-label {{ font-size: 0.95em; }}
-  .sentiment-bar {{ display: flex; height: 10px; border-radius: 4px; overflow: hidden; margin: 8px 0; }}
+  li {{ margin-bottom: 0.9em; }}
+  li p {{ margin: 3px 0 0; font-size: 0.88em; color: #555; }}
+  p.sources-list {{ font-size: 0.78em; color: #999; margin-top: 2px; }}
+  a {{ color: #1a6b9a; text-decoration: none; }}
+  a:hover {{ text-decoration: underline; }}
+  .source-badge {{ display: inline-block; background: #8b0000; color: #fff; border-radius: 10px; font-size: 0.72em; padding: 1px 8px; margin-left: 8px; vertical-align: middle; }}
+  .sentiment {{ background: #f9f9f9; border: 1px solid #e0e0e0; border-radius: 6px; padding: 10px 16px; margin: 1em 0; font-size: 0.9em; }}
+  .sentiment-bar {{ display: flex; height: 8px; border-radius: 4px; overflow: hidden; margin: 6px 0; }}
   .bar-pos {{ background: #2a7a2a; }}
   .bar-neu {{ background: #bbb; }}
   .bar-neg {{ background: #c0392b; }}
   .sentiment-pcts {{ font-size: 0.8em; }}
-  .keywords {{ margin: 0.8em 0; font-size: 0.9em; line-height: 2; }}
-  .kw {{ display: inline-block; background: #e8f0fe; color: #1a4a8a; border-radius: 3px; padding: 2px 8px; margin: 2px 3px; font-size: 0.85em; }}
+  .meta {{ color: #aaa; font-size: 0.8em; margin-top: 2.5em; border-top: 1px solid #eee; padding-top: 1em; }}
 </style>
 </head><body>
 <h1>Victoria Morning Brief</h1>
-<p class="meta">{today}</p>
-{nlp_header}
-{"".join(sections)}
+<p class="meta" style="margin-top:4px;border-top:none;padding-top:0">{today}</p>
+{header}
+{major}
+{sections}
 <p class="meta">Generated by victoria-brief.</p>
 </body></html>"""

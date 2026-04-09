@@ -1,98 +1,73 @@
-# feeds.yaml — RSS feeds, stock tickers, and supplemental search queries
-# for the Victoria BC Morning Brief.
+# feeds.yaml — news sources for the Victoria BC Morning Brief.
 #
-# Edit this file freely — no Python knowledge required.
-# Feeds marked "(unverified)" may need a URL check.
+# Each source needs either `url` (RSS feed) or `search` (DuckDuckGo query).
+# `name` is how the source appears as a section header in the digest.
 
-feeds:
+sources:
 
-  tech_startups:
-    - https://businessexaminer.ca/feed/              # Business Examiner Vancouver Island
-    - https://douglasmagazine.com/feed/               # Douglas Magazine (Victoria business/culture)
-    - https://biv.com/rss                             # Business in Vancouver
-    - https://victoriabuzz.com/feed/                  # Victoria Buzz (covers tech events)
+  # --- Local Victoria / Vancouver Island news ---
+  - name: "CHEK News"
+    url: "https://www.cheknews.ca/feed/"
 
-  jobs:
-    - https://www.workbc.ca/rss/jobs?region=5920      # WorkBC Victoria region (unverified)
-    # LinkedIn and Indeed no longer publish RSS — supplemented by web search below.
+  - name: "Times Colonist"
+    url: "https://www.timescolonist.com/rss/news"
 
-  cultural_events:
-    - https://victoriabuzz.com/feed/
-    - https://www.timescolonist.com/rss/news          # Times Colonist
-    - https://www.cheknews.ca/feed/                   # CHEK News Victoria
+  - name: "Victoria Buzz"
+    url: "https://victoriabuzz.com/feed/"
 
-  first_nations:
-    - https://www.aptnnews.ca/national-news/feed/     # APTN National News
-    - https://www.cbc.ca/cmlink/rss-cbcindigenous     # CBC Indigenous
-    - https://windspeaker.com/feed/                   # Windspeaker (unverified)
-    # Songhees, Esquimalt, W̱SÁNEĆ nations — no RSS; supplemented by web search.
+  - name: "Business Examiner Vancouver Island"
+    url: "https://businessexaminer.ca/feed/"
 
-  bc_legislature:
-    - https://news.gov.bc.ca/rss/news                 # BC Government news releases
-    - https://news.gov.bc.ca/rss/releases             # BC Government press releases (try both)
+  - name: "Douglas Magazine"
+    url: "https://douglasmagazine.com/feed/"
 
-  arts_funding:
-    # BC Arts Council has no RSS feed — supplemented by web search.
-    - https://www.timescolonist.com/rss/entertainment
+  # --- BC-wide ---
+  - name: "CBC British Columbia"
+    url: "https://www.cbc.ca/cmlink/rss-canada-britishcolumbia"
 
-  uvic_camosun:
-    - https://www.uvic.ca/news/rss/                   # UVic news (unverified)
-    - https://www.uvic.ca/news/feed/                  # UVic news alternate URL
-    # Camosun College has no RSS feed — supplemented by web search.
+  - name: "Global News BC"
+    url: "https://globalnews.ca/bc/feed/"
 
-  bc_ferries:
-    # BC Ferries has no standard RSS alert feed — supplemented by web search.
-    - https://www.cheknews.ca/feed/                   # CHEK frequently covers BC Ferries
+  - name: "BC Government News"
+    url: "https://news.gov.bc.ca/rss/news"
 
-  real_estate:
-    - https://victoriabuzz.com/feed/
-    - https://www.timescolonist.com/rss/business      # Times Colonist business/real estate
+  # --- First Nations ---
+  - name: "APTN National News"
+    url: "https://www.aptnnews.ca/national-news/feed/"
 
-  general_victoria:
-    - https://www.timescolonist.com/rss/news
-    - https://www.cheknews.ca/feed/
-    - https://www.cbc.ca/cmlink/rss-canada-britishcolumbia   # CBC BC
-    - https://globalnews.ca/bc/feed/                         # Global News BC
+  - name: "CBC Indigenous"
+    url: "https://www.cbc.ca/cmlink/rss-cbcindigenous"
 
+  - name: "First Nations: Songhees & Esquimalt"
+    search: "Songhees Nation OR Esquimalt Nation news announcement"
 
-# Supplemental web searches run via DuckDuckGo for categories without RSS.
-# Each category can have multiple queries; results are merged and deduplicated.
-web_search_queries:
+  - name: "First Nations: W̱SÁNEĆ & BC"
+    search: "W̱SÁNEĆ peoples OR FNLC BC First Nations news"
 
-  jobs:
-    - "Victoria BC tech startup jobs hiring site:linkedin.com OR site:workbc.ca"
-    - "Vancouver Island technology company hiring 2025"
+  # --- Tech & Jobs ---
+  - name: "BC Tech & Startups"
+    search: "Victoria BC OR Vancouver Island tech startup news"
 
-  first_nations:
-    - "Songhees Nation news announcement"
-    - "Esquimalt Nation news BC"
-    - "W̱SÁNEĆ peoples news"
-    - "First Nations Leadership Council BC announcement"
-    - "BC First Nations news this week"
+  - name: "Vancouver Island Jobs"
+    search: "Victoria BC technology jobs hiring"
 
-  bc_legislature:
-    - "BC legislature new bill announcement this week"
-    - "British Columbia provincial government policy announcement"
+  # --- Arts & Culture ---
+  - name: "BC Arts Council"
+    search: "BC Arts Council grant funding announcement"
 
-  arts_funding:
-    - "BC Arts Council grant funding call 2025"
-    - "BC Arts Council deadline announcement"
-    - "Creative BC funding opportunity"
+  - name: "Victoria Events"
+    search: "Victoria BC cultural event this week"
 
-  uvic_camosun:
-    - "University of Victoria research news"
-    - "Camosun College news Victoria BC"
-    - "UVic event announcement this week"
+  # --- University & Research ---
+  - name: "UVic News"
+    url: "https://www.uvic.ca/news/rss/"
 
-  bc_ferries:
-    - "BC Ferries service disruption cancellation alert"
-    - "BC Ferries schedule change announcement"
+  - name: "Camosun & UVic Events"
+    search: "Camosun College OR UVic Victoria BC news announcement"
 
-  real_estate:
-    - "Victoria BC real estate market news"
-    - "Victoria BC rental housing news"
-    - "VREB Victoria real estate board statistics"
+  # --- Housing & Ferries ---
+  - name: "BC Ferries"
+    search: "BC Ferries disruption cancellation schedule change"
 
-  cultural_events:
-    - "Victoria BC cultural event this week"
-    - "Victoria BC Indigenous arts event"
+  - name: "Victoria Housing & Real Estate"
+    search: "Victoria BC real estate rental housing market"

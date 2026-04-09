@@ -1,13 +1,14 @@
+from __future__ import annotations
+
 import argparse
 import sys
 from datetime import datetime
 from pathlib import Path
 
 from .config import load_config
-from .rss import fetch_rss_items
-from .search import fetch_supplemental
+from .sources import fetch_all
+from .nlp import deduplicate, score_items, find_major_stories, summarize_item, sentiment_summary
 from .render import to_html
-from .nlp import deduplicate_by_category, summarize_all, sentiment_summary
 from . import mailer
 
 
@@ -24,23 +25,28 @@ def main() -> None:
     )
     args = parser.parse_args()
 
-    feeds, _, search_queries = load_config()
+    sources_config, _, _ = load_config()
 
-    print("Fetching RSS feeds...")
-    rss_items = fetch_rss_items(feeds)
-    print(f"  {sum(len(v) for v in rss_items.values())} items")
+    print("Fetching sources...")
+    raw_sources = fetch_all(sources_config)
+    total = sum(len(v) for v in raw_sources.values())
+    print(f"  {total} items across {len(raw_sources)} sources")
 
-    print("Running supplemental web searches...")
-    supplemental = fetch_supplemental(search_queries)
-    print(f"  {sum(len(v) for v in supplemental.values())} items")
+    print("Running NLP pipeline...")
+    processed: dict[str, list[dict]] = {}
+    for name, items in raw_sources.items():
+        items = deduplicate(items)
+        items = [dict(item, summary=summarize_item(item)) for item in items]
+        items = score_items(items)
+        processed[name] = items
 
-    print("Running NLP (dedup, summarization, sentiment)...")
-    rss_items, supplemental = deduplicate_by_category(rss_items, supplemental)
-    rss_items, supplemental = summarize_all(rss_items, supplemental)
-    sentiment = sentiment_summary(rss_items, supplemental)
+    major = find_major_stories(processed, min_sources=3, max_stories=5)
+    print(f"  {len(major)} major stories detected")
+
+    sentiment = sentiment_summary(processed)
     print(f"  tone: {sentiment['overall']} ({sentiment['score']:+.3f})")
 
-    html = to_html(rss_items, supplemental, sentiment=sentiment)
+    html = to_html(processed, major_stories=major, sentiment=sentiment, top_n=3)
 
     if not html.strip():
         print("ERROR: render produced empty output.", file=sys.stderr)
