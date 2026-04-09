@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 """
 NLP utilities using NLTK + scikit-learn.
 

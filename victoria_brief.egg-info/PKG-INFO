@@ -1,0 +1,11 @@
+Metadata-Version: 2.4
+Name: victoria-brief
+Version: 0.1.0
+Summary: Daily Victoria BC morning news digest via Claude
+Requires-Python: >=3.9
+Requires-Dist: feedparser>=6.0.11
+Requires-Dist: duckduckgo-search>=6.0.0
+Requires-Dist: yfinance>=0.2.38
+Requires-Dist: pyyaml>=6.0
+Requires-Dist: nltk>=3.9
+Requires-Dist: scikit-learn>=1.4

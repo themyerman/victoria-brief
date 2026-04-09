@@ -1,0 +1,17 @@
+README.md
+pyproject.toml
+victoria_brief/__init__.py
+victoria_brief/cli.py
+victoria_brief/config.py
+victoria_brief/mailer.py
+victoria_brief/nlp.py
+victoria_brief/render.py
+victoria_brief/rss.py
+victoria_brief/search.py
+victoria_brief/stocks.py
+victoria_brief.egg-info/PKG-INFO
+victoria_brief.egg-info/SOURCES.txt
+victoria_brief.egg-info/dependency_links.txt
+victoria_brief.egg-info/entry_points.txt
+victoria_brief.egg-info/requires.txt
+victoria_brief.egg-info/top_level.txt

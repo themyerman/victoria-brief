@@ -59,9 +59,7 @@ feeds:
 # Format: TICKER.TO for TSX, TICKER.V for TSX Venture Exchange.
 # Note: most well-known Victoria businesses are private — customize as needed.
 stocks:
-  - CMH.TO    # Carmanah Technologies (TSX) — Victoria-based solar/LED signalling
   - WELL.TO   # WELL Health Technologies (TSX) — strong BC presence
-  - FOBI.V    # Fobi AI (TSX-V) — BC-based data intelligence
 
 
 # Supplemental web searches run via DuckDuckGo for categories without RSS.

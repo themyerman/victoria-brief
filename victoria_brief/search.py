@@ -1,10 +1,11 @@
+from __future__ import annotations
 import sys
 
 
 def web_search(query: str, max_results: int = 4) -> list[dict]:
     """Return [{title, link, snippet}] from DuckDuckGo (no API key required)."""
     try:
-        from duckduckgo_search import DDGS
+        from ddgs import DDGS
         with DDGS() as ddgs:
             return [
                 {
