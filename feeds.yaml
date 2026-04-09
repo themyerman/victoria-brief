@@ -55,13 +55,6 @@ feeds:
     - https://globalnews.ca/bc/feed/                         # Global News BC
 
 
-# Victoria-area public companies to track via Yahoo Finance.
-# Format: TICKER.TO for TSX, TICKER.V for TSX Venture Exchange.
-# Note: most well-known Victoria businesses are private — customize as needed.
-stocks:
-  - WELL.TO   # WELL Health Technologies (TSX) — strong BC presence
-
-
 # Supplemental web searches run via DuckDuckGo for categories without RSS.
 # Each category can have multiple queries; results are merged and deduplicated.
 web_search_queries:

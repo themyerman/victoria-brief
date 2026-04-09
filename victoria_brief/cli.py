@@ -6,9 +6,8 @@ from pathlib import Path
 from .config import load_config
 from .rss import fetch_rss_items
 from .search import fetch_supplemental
-from .stocks import fetch_stock_prices
 from .render import to_html
-from .nlp import deduplicate_by_category, summarize_all, top_keywords, sentiment_summary
+from .nlp import deduplicate_by_category, summarize_all, sentiment_summary
 from . import mailer
 
 
@@ -25,7 +24,7 @@ def main() -> None:
     )
     args = parser.parse_args()
 
-    feeds, stocks, search_queries = load_config()
+    feeds, _, search_queries = load_config()
 
     print("Fetching RSS feeds...")
     rss_items = fetch_rss_items(feeds)
@@ -35,18 +34,13 @@ def main() -> None:
     supplemental = fetch_supplemental(search_queries)
     print(f"  {sum(len(v) for v in supplemental.values())} items")
 
-    print("Fetching stock prices...")
-    stock_prices = fetch_stock_prices(stocks)
-    print(f"  {len(stock_prices)} tickers")
-
-    print("Running NLP (dedup, summarization, keywords, sentiment)...")
+    print("Running NLP (dedup, summarization, sentiment)...")
     rss_items, supplemental = deduplicate_by_category(rss_items, supplemental)
     rss_items, supplemental = summarize_all(rss_items, supplemental)
-    keywords = top_keywords(rss_items, supplemental)
     sentiment = sentiment_summary(rss_items, supplemental)
-    print(f"  tone: {sentiment['overall']} ({sentiment['score']:+.3f}), keywords: {', '.join(keywords[:5])}, ...")
+    print(f"  tone: {sentiment['overall']} ({sentiment['score']:+.3f})")
 
-    html = to_html(rss_items, supplemental, stock_prices, keywords=keywords, sentiment=sentiment)
+    html = to_html(rss_items, supplemental, sentiment=sentiment)
 
     if not html.strip():
         print("ERROR: render produced empty output.", file=sys.stderr)

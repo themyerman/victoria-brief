@@ -52,8 +52,6 @@ def _keywords_block(keywords: list[str]) -> str:
 def to_html(
     rss_items: dict,
     supplemental: dict,
-    stock_prices: dict,
-    keywords: Optional[list[str]] = None,
     sentiment: Optional[dict] = None,
 ) -> str:
     today = datetime.now().strftime("%A, %B %-d, %Y")
@@ -99,11 +97,7 @@ def to_html(
   </table>
 </section>"""
 
-    nlp_header = ""
-    if sentiment:
-        nlp_header += _sentiment_bar(sentiment)
-    if keywords:
-        nlp_header += _keywords_block(keywords)
+    nlp_header = _sentiment_bar(sentiment) if sentiment else ""
 
     return f"""<!DOCTYPE html>
 <html lang="en"><head>
