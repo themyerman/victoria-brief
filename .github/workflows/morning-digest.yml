@@ -1,0 +1,39 @@
+name: Victoria Morning Brief
+
+on:
+  schedule:
+    # 14:00 UTC = 6:00 AM Pacific Standard Time (PST, UTC-8)
+    # During PDT (UTC-7, Mar–Nov) this runs at 7:00 AM local.
+    # Adjust to 15:00 UTC if you want 7 AM PST year-round.
+    - cron: "0 14 * * *"
+
+  # Allow manual trigger from the Actions tab (useful for testing)
+  workflow_dispatch:
+
+jobs:
+  send-digest:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: "pip"
+
+      - name: Install package
+        run: pip install .
+
+      - name: Run digest
+        env:
+          EMAIL_SMTP_HOST:   ${{ secrets.EMAIL_SMTP_HOST }}
+          EMAIL_SMTP_PORT:   ${{ secrets.EMAIL_SMTP_PORT }}
+          EMAIL_SMTP_USER:   ${{ secrets.EMAIL_SMTP_USER }}
+          EMAIL_SMTP_PASSWORD: ${{ secrets.EMAIL_SMTP_PASSWORD }}
+          EMAIL_FROM:        ${{ secrets.EMAIL_FROM }}
+          EMAIL_TO:          ${{ secrets.EMAIL_TO }}
+        run: victoria-brief --email

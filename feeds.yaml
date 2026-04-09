@@ -1,0 +1,107 @@
+# feeds.yaml — RSS feeds, stock tickers, and supplemental search queries
+# for the Victoria BC Morning Brief.
+#
+# Edit this file freely — no Python knowledge required.
+# Feeds marked "(unverified)" may need a URL check.
+
+feeds:
+
+  tech_startups:
+    - https://businessexaminer.ca/feed/              # Business Examiner Vancouver Island
+    - https://douglasmagazine.com/feed/               # Douglas Magazine (Victoria business/culture)
+    - https://biv.com/rss                             # Business in Vancouver
+    - https://victoriabuzz.com/feed/                  # Victoria Buzz (covers tech events)
+
+  jobs:
+    - https://www.workbc.ca/rss/jobs?region=5920      # WorkBC Victoria region (unverified)
+    # LinkedIn and Indeed no longer publish RSS — supplemented by web search below.
+
+  cultural_events:
+    - https://victoriabuzz.com/feed/
+    - https://www.timescolonist.com/rss/news          # Times Colonist
+    - https://www.cheknews.ca/feed/                   # CHEK News Victoria
+
+  first_nations:
+    - https://www.aptnnews.ca/national-news/feed/     # APTN National News
+    - https://www.cbc.ca/cmlink/rss-cbcindigenous     # CBC Indigenous
+    - https://windspeaker.com/feed/                   # Windspeaker (unverified)
+    # Songhees, Esquimalt, W̱SÁNEĆ nations — no RSS; supplemented by web search.
+
+  bc_legislature:
+    - https://news.gov.bc.ca/rss/news                 # BC Government news releases
+    - https://news.gov.bc.ca/rss/releases             # BC Government press releases (try both)
+
+  arts_funding:
+    # BC Arts Council has no RSS feed — supplemented by web search.
+    - https://www.timescolonist.com/rss/entertainment
+
+  uvic_camosun:
+    - https://www.uvic.ca/news/rss/                   # UVic news (unverified)
+    - https://www.uvic.ca/news/feed/                  # UVic news alternate URL
+    # Camosun College has no RSS feed — supplemented by web search.
+
+  bc_ferries:
+    # BC Ferries has no standard RSS alert feed — supplemented by web search.
+    - https://www.cheknews.ca/feed/                   # CHEK frequently covers BC Ferries
+
+  real_estate:
+    - https://victoriabuzz.com/feed/
+    - https://www.timescolonist.com/rss/business      # Times Colonist business/real estate
+
+  general_victoria:
+    - https://www.timescolonist.com/rss/news
+    - https://www.cheknews.ca/feed/
+    - https://www.cbc.ca/cmlink/rss-canada-britishcolumbia   # CBC BC
+    - https://globalnews.ca/bc/feed/                         # Global News BC
+
+
+# Victoria-area public companies to track via Yahoo Finance.
+# Format: TICKER.TO for TSX, TICKER.V for TSX Venture Exchange.
+# Note: most well-known Victoria businesses are private — customize as needed.
+stocks:
+  - CMH.TO    # Carmanah Technologies (TSX) — Victoria-based solar/LED signalling
+  - WELL.TO   # WELL Health Technologies (TSX) — strong BC presence
+  - FOBI.V    # Fobi AI (TSX-V) — BC-based data intelligence
+
+
+# Supplemental web searches run via DuckDuckGo for categories without RSS.
+# Each category can have multiple queries; results are merged and deduplicated.
+web_search_queries:
+
+  jobs:
+    - "Victoria BC tech startup jobs hiring site:linkedin.com OR site:workbc.ca"
+    - "Vancouver Island technology company hiring 2025"
+
+  first_nations:
+    - "Songhees Nation news announcement"
+    - "Esquimalt Nation news BC"
+    - "W̱SÁNEĆ peoples news"
+    - "First Nations Leadership Council BC announcement"
+    - "BC First Nations news this week"
+
+  bc_legislature:
+    - "BC legislature new bill announcement this week"
+    - "British Columbia provincial government policy announcement"
+
+  arts_funding:
+    - "BC Arts Council grant funding call 2025"
+    - "BC Arts Council deadline announcement"
+    - "Creative BC funding opportunity"
+
+  uvic_camosun:
+    - "University of Victoria research news"
+    - "Camosun College news Victoria BC"
+    - "UVic event announcement this week"
+
+  bc_ferries:
+    - "BC Ferries service disruption cancellation alert"
+    - "BC Ferries schedule change announcement"
+
+  real_estate:
+    - "Victoria BC real estate market news"
+    - "Victoria BC rental housing news"
+    - "VREB Victoria real estate board statistics"
+
+  cultural_events:
+    - "Victoria BC cultural event this week"
+    - "Victoria BC Indigenous arts event"
