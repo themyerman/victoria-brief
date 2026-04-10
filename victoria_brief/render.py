@@ -87,11 +87,25 @@ def _glance_section(
     """Pick the single top-scored item from each category and render as a
     bullet digest. Pure data — no LLM required."""
 
-    # Bucket all items by category
+    # Bucket all items by category; also track the single best item overall
     cat_items: dict[str, list[dict]] = {}
+    all_items: list[dict] = []
     for name, items in sources.items():
         cat = (categories or {}).get(name, "Other")
         cat_items.setdefault(cat, []).extend(items)
+        all_items.extend(items)
+
+    # Hero image: thumbnail from the highest-scored item that has one
+    hero_html = ""
+    scored_with_thumb = [
+        i for i in all_items if i.get("thumbnail") and i.get("_score", 0) > 0
+    ]
+    if scored_with_thumb:
+        hero = max(scored_with_thumb, key=lambda x: x.get("_score", 0))
+        hero_link = hero.get("link", "")
+        hero_src = hero.get("thumbnail", "")
+        img = f'<img class="glance-hero" src="{hero_src}" alt="">'
+        hero_html = f'<a href="{hero_link}" class="glance-hero-wrap">{img}</a>' if hero_link else img
 
     rows = []
     for cat in _CATEGORY_ORDER:
@@ -113,8 +127,13 @@ def _glance_section(
         return ""
 
     return f"""<section class="glance-section">
-  <h2 class="glance-h2">Today at a glance</h2>
-  <ul class="glance-list">{"".join(rows)}</ul>
+  <div class="glance-inner">
+    <div class="glance-bullets">
+      <h2 class="glance-h2">Today at a glance</h2>
+      <ul class="glance-list">{"".join(rows)}</ul>
+    </div>
+    {hero_html}
+  </div>
 </section>"""
 
 
@@ -187,6 +206,12 @@ def to_html(
   /* Today at a glance */
   .glance-section {{ background: #fff; border: 1px solid #ddd; border-radius: 8px;
                      padding: 14px 20px; margin-bottom: 16px; }}
+  .glance-inner {{ display: flex; gap: 16px; align-items: stretch; }}
+  .glance-bullets {{ flex: 1; min-width: 0; }}
+  .glance-hero-wrap {{ flex-shrink: 0; display: block; width: 220px; }}
+  .glance-hero {{ width: 220px; height: 100%; max-height: 220px; object-fit: cover;
+                  border-radius: 6px; display: block; }}
+  @media (max-width: 600px) {{ .glance-hero-wrap {{ display: none; }} }}
   .glance-h2 {{ margin: 0 0 10px; font-size: 0.75em; text-transform: uppercase;
                 letter-spacing: 0.08em; color: #555; }}
   .glance-list {{ list-style: none; padding: 0; margin: 0;
