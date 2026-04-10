@@ -80,14 +80,23 @@ def _source_card(name: str, items: list[dict], top_n: int = 3, category: str = "
 # Today at a Glance
 # ---------------------------------------------------------------------------
 
+_GLANCE_THRESHOLD = 0.20          # min score to appear in glance
+_GLANCE_MAX_PER_CAT = 3           # hard cap per category
+_GLANCE_TITLE_LEN = 68            # chars before truncation
+_GLANCE_SKIP_CATS = {"Other"}     # categories too noisy for the digest
+
+
+def _truncate(text: str, length: int = _GLANCE_TITLE_LEN) -> str:
+    return text if len(text) <= length else text[:length].rsplit(" ", 1)[0] + "…"
+
+
 def _glance_section(
     sources: dict[str, list[dict]],
     categories: Optional[dict[str, str]],
 ) -> str:
-    """Pick the single top-scored item from each category and render as a
-    bullet digest. Pure data — no LLM required."""
+    """Score-threshold driven glance: up to 3 items per category that clear
+    the score bar, rendered in a 2-column list. No LLM required."""
 
-    # Bucket all items by category; also track the single best item overall
     cat_items: dict[str, list[dict]] = {}
     all_items: list[dict] = []
     for name, items in sources.items():
@@ -109,19 +118,26 @@ def _glance_section(
 
     rows = []
     for cat in _CATEGORY_ORDER:
+        if cat in _GLANCE_SKIP_CATS:
+            continue
         items = cat_items.get(cat)
         if not items:
             continue
-        # Items are already scored; take the highest
-        best = max(items, key=lambda x: x.get("_score", 0))
-        title = best.get("title", "").strip()
-        link = best.get("link", "")
-        if not title:
-            continue
-        anchor = f'<a href="{link}">{title}</a>' if link else title
-        rows.append(
-            f'<li><span class="glance-cat">{cat}</span>{anchor}</li>'
-        )
+        # Sort by score, keep those above threshold (up to max)
+        candidates = sorted(items, key=lambda x: x.get("_score", 0), reverse=True)
+        picks = [i for i in candidates if i.get("_score", 0) >= _GLANCE_THRESHOLD][:_GLANCE_MAX_PER_CAT]
+        # Always show at least the top item even if it misses the threshold
+        if not picks and candidates:
+            picks = candidates[:1]
+        for idx, item in enumerate(picks):
+            title = _truncate(item.get("title", "").strip())
+            link = item.get("link", "")
+            if not title:
+                continue
+            anchor = f'<a href="{link}">{title}</a>' if link else title
+            # Category badge only on first item; empty cell keeps alignment on rest
+            badge = f'<span class="glance-cat">{cat}</span>' if idx == 0 else '<span class="glance-indent"></span>'
+            rows.append(f'<li>{badge}{anchor}</li>')
 
     if not rows:
         return ""
@@ -215,13 +231,15 @@ def to_html(
   .glance-h2 {{ margin: 0 0 10px; font-size: 0.75em; text-transform: uppercase;
                 letter-spacing: 0.08em; color: #555; }}
   .glance-list {{ list-style: none; padding: 0; margin: 0;
-                  display: flex; flex-direction: column; gap: 6px; }}
-  .glance-list li {{ font-size: 0.88em; display: flex; align-items: baseline; gap: 8px; }}
-  .glance-cat {{ flex-shrink: 0; font-size: 0.78em; font-weight: 700;
-                 text-transform: uppercase; letter-spacing: 0.06em;
-                 color: #fff; background: #1a1a2e; padding: 1px 6px;
-                 border-radius: 3px; opacity: 0.8; }}
-  .glance-list a {{ color: #1a1a2e; text-decoration: none; line-height: 1.35; }}
+                  display: grid; grid-template-columns: 1fr 1fr; column-gap: 24px; row-gap: 5px; }}
+  @media (max-width: 700px) {{ .glance-list {{ grid-template-columns: 1fr; }} }}
+  .glance-list li {{ font-size: 0.85em; display: flex; align-items: flex-start; gap: 8px; }}
+  .glance-cat {{ flex-shrink: 0; width: 118px; text-align: center; font-size: 0.72em;
+                 font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;
+                 color: #fff; background: #1a1a2e; padding: 2px 6px;
+                 border-radius: 3px; opacity: 0.85; white-space: nowrap; line-height: 1.6; }}
+  .glance-indent {{ flex-shrink: 0; width: 118px; }}
+  .glance-list a {{ color: #1a1a2e; text-decoration: none; line-height: 1.4; }}
   .glance-list a:hover {{ color: #1a6b9a; text-decoration: underline; }}
 
   /* Major stories */
