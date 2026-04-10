@@ -82,12 +82,13 @@ def _source_card(name: str, items: list[dict], top_n: int = 3, category: str = "
 
 _GLANCE_THRESHOLD = 0.20          # min score to appear in glance
 _GLANCE_MAX_PER_CAT = 3           # hard cap per category
-_GLANCE_TITLE_LEN = 68            # chars before truncation
+_GLANCE_MAX_WORDS = 8             # word cap on headlines (after title cleaning)
 _GLANCE_SKIP_CATS = {"Other"}     # categories too noisy for the digest
 
 
-def _truncate(text: str, length: int = _GLANCE_TITLE_LEN) -> str:
-    return text if len(text) <= length else text[:length].rsplit(" ", 1)[0] + "…"
+def _truncate(text: str, max_words: int = _GLANCE_MAX_WORDS) -> str:
+    words = text.split()
+    return text if len(words) <= max_words else " ".join(words[:max_words]) + "…"
 
 
 def _glance_section(
@@ -116,37 +117,59 @@ def _glance_section(
         img = f'<img class="glance-hero" src="{hero_src}" alt="">'
         hero_html = f'<a href="{hero_link}" class="glance-hero-wrap">{img}</a>' if hero_link else img
 
-    rows = []
+    # Build category groups: [(cat, [item, ...]), ...]
+    groups = []
     for cat in _CATEGORY_ORDER:
         if cat in _GLANCE_SKIP_CATS:
             continue
         items = cat_items.get(cat)
         if not items:
             continue
-        # Sort by score, keep those above threshold (up to max)
         candidates = sorted(items, key=lambda x: x.get("_score", 0), reverse=True)
         picks = [i for i in candidates if i.get("_score", 0) >= _GLANCE_THRESHOLD][:_GLANCE_MAX_PER_CAT]
-        # Always show at least the top item even if it misses the threshold
         if not picks and candidates:
             picks = candidates[:1]
-        for idx, item in enumerate(picks):
-            title = _truncate(item.get("title", "").strip())
-            link = item.get("link", "")
-            if not title:
-                continue
-            anchor = f'<a href="{link}">{title}</a>' if link else title
-            # Category badge only on first item; empty cell keeps alignment on rest
-            badge = f'<span class="glance-cat">{cat}</span>' if idx == 0 else '<span class="glance-indent"></span>'
-            rows.append(f'<li>{badge}{anchor}</li>')
+        picks = [i for i in picks if i.get("title", "").strip()]
+        if picks:
+            groups.append((cat, picks))
 
-    if not rows:
+    if not groups:
         return ""
+
+    # Distribute groups into two columns, greedy-balance by item count
+    left_groups: list = []
+    right_groups: list = []
+    left_n = right_n = 0
+    for group in groups:
+        if left_n <= right_n:
+            left_groups.append(group)
+            left_n += len(group[1])
+        else:
+            right_groups.append(group)
+            right_n += len(group[1])
+
+    def _render_col(col_groups: list) -> str:
+        rows = []
+        for cat, picks in col_groups:
+            for idx, item in enumerate(picks):
+                title = _truncate(item.get("title", "").strip())
+                link = item.get("link", "")
+                anchor = f'<a href="{link}">{title}</a>' if link else title
+                badge = f'<span class="glance-cat">{cat}</span>' if idx == 0 else '<span class="glance-indent"></span>'
+                rows.append(f'<li>{badge}{anchor}</li>')
+        return f'<ul class="glance-list">{"".join(rows)}</ul>'
+
+    cols_html = (
+        f'<div class="glance-cols">'
+        f'{_render_col(left_groups)}{_render_col(right_groups)}'
+        f'</div>'
+    )
 
     return f"""<section class="glance-section">
   <div class="glance-inner">
     <div class="glance-bullets">
       <h2 class="glance-h2">Today at a glance</h2>
-      <ul class="glance-list">{"".join(rows)}</ul>
+      {cols_html}
     </div>
     {hero_html}
   </div>
@@ -230,16 +253,17 @@ def to_html(
   @media (max-width: 600px) {{ .glance-hero-wrap {{ display: none; }} }}
   .glance-h2 {{ margin: 0 0 10px; font-size: 0.75em; text-transform: uppercase;
                 letter-spacing: 0.08em; color: #555; }}
-  .glance-list {{ list-style: none; padding: 0; margin: 0;
-                  display: grid; grid-template-columns: 1fr 1fr; column-gap: 24px; row-gap: 5px; }}
-  @media (max-width: 700px) {{ .glance-list {{ grid-template-columns: 1fr; }} }}
+  .glance-cols {{ display: flex; gap: 24px; }}
+  .glance-list {{ list-style: none; padding: 0; margin: 0; flex: 1;
+                  display: flex; flex-direction: column; gap: 5px; }}
+  @media (max-width: 700px) {{ .glance-cols {{ flex-direction: column; }} }}
   .glance-list li {{ font-size: 0.85em; display: flex; align-items: flex-start; gap: 8px; }}
-  .glance-cat {{ flex-shrink: 0; width: 118px; text-align: center; font-size: 0.72em;
+  .glance-cat {{ flex-shrink: 0; width: 112px; text-align: center; font-size: 0.72em;
                  font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;
                  color: #fff; background: #1a1a2e; padding: 2px 6px;
                  border-radius: 3px; opacity: 0.85; white-space: nowrap; line-height: 1.6; }}
-  .glance-indent {{ flex-shrink: 0; width: 118px; }}
-  .glance-list a {{ color: #1a1a2e; text-decoration: none; line-height: 1.4; }}
+  .glance-indent {{ flex-shrink: 0; width: 112px; }}
+  .glance-list a {{ color: #1a1a2e; text-decoration: none; line-height: 1.35; }}
   .glance-list a:hover {{ color: #1a6b9a; text-decoration: underline; }}
 
   /* Major stories */

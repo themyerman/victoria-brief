@@ -21,6 +21,61 @@ def _clean_summary(text: str) -> str:
     return _BOILERPLATE_RE.sub("", text).strip()
 
 
+# ---------------------------------------------------------------------------
+# Title cleaning
+# ---------------------------------------------------------------------------
+
+# Known outlet names to strip from prefixes / suffixes
+_OUTLETS = (
+    r"CBC|CTV|Global News|CHEK News?|Times Colonist|Victoria Buzz|BC Ferries|"
+    r"APTN News?|Vancouver Sun|National Post|Globe and Mail|Business Examiner|"
+    r"Douglas Magazine|BC Government News|BC Gov(?:ernment)?|Songhees Nation|"
+    r"BC Arts Council|BCAC|UVic|Camosun|Google News|Yahoo News|MSN|Reuters|"
+    r"The Canadian Press|CP24|Victoria Times Colonist|Victoria News"
+)
+
+# "Google News - Some headline" → strip leading outlet prefix
+_TITLE_PREFIX_RE = re.compile(rf'^(?:{_OUTLETS})\s*[—–\-]\s*', re.IGNORECASE)
+
+# "Some headline | CBC" or "Some headline — Global News" → strip suffix
+_TITLE_SUFFIX_RE = re.compile(r'\s*[\|—–]\s*.{1,50}$')
+
+# Filler phrases tacked onto the end of headlines
+_TITLE_FILLER_RE = re.compile(
+    r"[,:]?\s*(here'?s? what (you need )?to know|what (you )?need to know|"
+    r"officials? say|report says?|data shows?|new data shows?|"
+    r"study (?:says?|finds?|shows?)|experts? say|police say)\s*$",
+    re.IGNORECASE,
+)
+
+# Dates like "April 7, 2026" anywhere in the title
+_TITLE_DATE_RE = re.compile(
+    r"\b(?:Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|Jun(?:e)?|"
+    r"Jul(?:y)?|Aug(?:ust)?|Sep(?:tember)?|Oct(?:ober)?|Nov(?:ember)?|"
+    r"Dec(?:ember)?)\s+\d{1,2},?\s+\d{4}\b",
+    re.IGNORECASE,
+)
+
+# Leading dateline: "VICTORIA, BC — " or "VANCOUVER — "
+_TITLE_DATELINE_RE = re.compile(r'^[A-Z][A-Z\s,\.]{2,25}\s*[—–\-]\s*')
+
+
+def _clean_title(text: str) -> str:
+    """Strip outlet names, datelines, dates, and filler from a headline."""
+    text = text.strip()
+    text = _TITLE_DATELINE_RE.sub("", text)       # "VICTORIA, BC — ..."
+    text = _TITLE_PREFIX_RE.sub("", text)          # "Google News - ..."
+    text = _TITLE_DATE_RE.sub("", text)            # "... April 7, 2026"
+    text = text.strip().rstrip(",-.:").strip()
+    text = _TITLE_SUFFIX_RE.sub("", text)          # "... | CBC"
+    text = _TITLE_FILLER_RE.sub("", text)          # "... officials say"
+    text = text.strip().rstrip(",-.:").strip()
+    # ALL CAPS titles → Title Case
+    if len(text) > 3 and text == text.upper():
+        text = text.title()
+    return text
+
+
 def fetch_rss(url: str, hours: int = 26) -> list[dict]:
     cutoff = datetime.now(timezone.utc) - timedelta(hours=hours)
     items = []
@@ -39,7 +94,7 @@ def fetch_rss(url: str, hours: int = 26) -> list[dict]:
             seen.add(link)
             raw = entry.get("summary", "") or entry.get("description", "")
             items.append({
-                "title": entry.get("title", "").strip(),
+                "title": _clean_title(entry.get("title", "")),
                 "link": link,
                 "summary": _clean_summary(_strip_html(raw))[:200],
                 "published": pub,
@@ -65,7 +120,7 @@ def fetch_search(query: str, max_results: int = 6) -> list[dict]:
         with DDGS() as ddgs:
             return [
                 {
-                    "title": r.get("title", ""),
+                    "title": _clean_title(r.get("title", "")),
                     "link": r.get("href", ""),
                     "summary": _clean_summary(r.get("body", ""))[:200],
                     "published": None,
