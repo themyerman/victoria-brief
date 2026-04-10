@@ -81,9 +81,8 @@ def main() -> None:
         mailer.send(subject=f"Victoria Morning Brief — {today}", html=html)
         print("Done.")
     else:
-        date_slug = datetime.now().strftime("%Y-%m-%d")
         dest = Path(args.file).expanduser()
         if dest.is_dir():
-            dest = dest / f"victoria-brief-{date_slug}.html"
+            dest = dest / "victoria-daily-brief.html"
         dest.write_text(html, encoding="utf-8")
         print(f"Saved: {dest}")
