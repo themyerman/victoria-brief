@@ -64,7 +64,7 @@ def main() -> None:
         top["Other News"] = rest_items
     processed = top
 
-    major = find_major_stories(processed, min_sources=3, max_stories=5)
+    major = find_major_stories(processed, min_sources=2, max_stories=3, similarity_threshold=0.25)
     print(f"  {len(major)} major stories detected")
 
     print("Fetching thumbnails...")
