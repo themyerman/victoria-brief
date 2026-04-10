@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 """
-NLP utilities: deduplication, scoring, major story detection, summarization, sentiment.
+NLP utilities: deduplication, scoring, major story detection, summarization.
 Uses NLTK + scikit-learn. NLTK data (~3MB) is auto-downloaded on first run.
 """
 
@@ -11,9 +11,8 @@ import nltk
 
 def _ensure_nltk_data() -> None:
     needed = [
-        ("sentiment/vader_lexicon.zip", "vader_lexicon"),
-        ("corpora/stopwords.zip",        "stopwords"),
-        ("tokenizers/punkt_tab.zip",     "punkt_tab"),
+        ("corpora/stopwords.zip",    "stopwords"),
+        ("tokenizers/punkt_tab.zip", "punkt_tab"),
     ]
     for path, pkg in needed:
         try:
@@ -54,15 +53,6 @@ def _recency_score(item: dict) -> float:
     return max(0.0, 1.0 - age_hours / 26.0)
 
 
-def _vader_magnitude(item: dict) -> float:
-    """Strong sentiment (either direction) = more newsworthy than flat wire copy."""
-    _ensure_nltk_data()
-    from nltk.sentiment.vader import SentimentIntensityAnalyzer
-    sia = SentimentIntensityAnalyzer()
-    text = item.get("title", "") + ". " + item.get("summary", "")
-    return abs(sia.polarity_scores(text)["compound"])
-
-
 def score_items(items: list[dict], drop_zero_local: bool = False) -> list[dict]:
     """
     Score and sort items by composite heuristic:
@@ -75,9 +65,8 @@ def score_items(items: list[dict], drop_zero_local: bool = False) -> list[dict]:
         local = _local_score(item)
         if drop_zero_local and local == 0.0:
             continue
-        s = (0.4 * _recency_score(item) +
-             0.4 * local +
-             0.2 * _vader_magnitude(item))
+        s = (0.5 * _recency_score(item) +
+             0.5 * local)
         scored.append(dict(item, _score=round(s, 4)))
     return sorted(scored, key=lambda x: x["_score"], reverse=True)
 
@@ -304,42 +293,3 @@ def summarize_item(item: dict, sentences: int = 1) -> str:
     return " ".join(s for s in sent_list if s in ranked)
 
 
-# ---------------------------------------------------------------------------
-# Sentiment analysis
-# ---------------------------------------------------------------------------
-
-def sentiment_summary(sources: dict[str, list[dict]]) -> dict:
-    _ensure_nltk_data()
-    from nltk.sentiment.vader import SentimentIntensityAnalyzer
-    sia = SentimentIntensityAnalyzer()
-
-    pos = neu = neg = 0
-    compound_total = 0.0
-    all_items = [item for items in sources.values() for item in items]
-
-    if not all_items:
-        return {"overall": "neutral", "score": 0.0,
-                "positive_pct": 0, "neutral_pct": 100, "negative_pct": 0}
-
-    for item in all_items:
-        text = (item.get("title", "") + ". " + item.get("summary", "")).strip()
-        scores = sia.polarity_scores(text)
-        compound_total += scores["compound"]
-        if scores["compound"] >= 0.05:
-            pos += 1
-        elif scores["compound"] <= -0.05:
-            neg += 1
-        else:
-            neu += 1
-
-    total = pos + neu + neg
-    avg = compound_total / total if total else 0.0
-    overall = "positive" if avg >= 0.05 else "negative" if avg <= -0.05 else "neutral"
-
-    return {
-        "overall": overall,
-        "score": round(avg, 3),
-        "positive_pct": round(pos / total * 100),
-        "neutral_pct": round(neu / total * 100),
-        "negative_pct": round(neg / total * 100),
-    }

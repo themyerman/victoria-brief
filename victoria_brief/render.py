@@ -5,32 +5,6 @@ from typing import Optional
 
 
 # ---------------------------------------------------------------------------
-# Sentiment bar
-# ---------------------------------------------------------------------------
-
-def _sentiment_bar(sentiment: dict) -> str:
-    pos = sentiment["positive_pct"]
-    neu = sentiment["neutral_pct"]
-    neg = sentiment["negative_pct"]
-    overall = sentiment["overall"]
-    score = sentiment["score"]
-    color = {"positive": "#2a7a2a", "neutral": "#777", "negative": "#b0310e"}[overall]
-    return f"""<div class="sentiment">
-  <span style="color:{color}">Tone today: <strong>{overall}</strong> ({score:+.3f})</span>
-  <div class="sbar">
-    <div class="sbar-pos" style="width:{pos}%" title="Positive {pos}%"></div>
-    <div class="sbar-neu" style="width:{neu}%" title="Neutral {neu}%"></div>
-    <div class="sbar-neg" style="width:{neg}%" title="Negative {neg}%"></div>
-  </div>
-  <small>
-    <span style="color:#2a7a2a">&#9632; {pos}% positive</span>&ensp;
-    <span style="color:#aaa">&#9632; {neu}% neutral</span>&ensp;
-    <span style="color:#b0310e">&#9632; {neg}% negative</span>
-  </small>
-</div>"""
-
-
-# ---------------------------------------------------------------------------
 # Major stories (full-width)
 # ---------------------------------------------------------------------------
 
@@ -96,12 +70,10 @@ def _source_card(name: str, items: list[dict], top_n: int = 3) -> str:
 def to_html(
     sources: dict[str, list[dict]],
     major_stories: Optional[list[dict]] = None,
-    sentiment: Optional[dict] = None,
     top_n: int = 3,
 ) -> str:
     today = datetime.now().strftime("%A, %B %-d, %Y")
 
-    header = _sentiment_bar(sentiment) if sentiment else ""
     major = _major_stories_section(major_stories or [])
     grid = "\n".join(
         _source_card(name, items, top_n)
@@ -131,14 +103,6 @@ def to_html(
   .masthead {{ background: #1a1a2e; color: #fff; padding: 16px 20px; border-radius: 8px; margin-bottom: 16px; }}
   .masthead h1 {{ margin: 0 0 2px; font-size: 1.4em; }}
   .masthead .date {{ color: #aaa; font-size: 0.85em; margin: 0; }}
-
-  /* Sentiment */
-  .sentiment {{ background: #fff; border: 1px solid #ddd; border-radius: 6px;
-                padding: 10px 14px; margin-bottom: 16px; font-size: 0.88em; }}
-  .sbar {{ display: flex; height: 6px; border-radius: 3px; overflow: hidden; margin: 6px 0 4px; }}
-  .sbar-pos {{ background: #2a7a2a; }}
-  .sbar-neu {{ background: #ccc; }}
-  .sbar-neg {{ background: #b0310e; }}
 
   /* Major stories */
   .major-section {{ background: #fff; border: 2px solid #8b0000;
@@ -185,7 +149,6 @@ def to_html(
   <p class="date">{today}</p>
 </div>
 
-{header}
 {major}
 <div class="grid">
 {grid}

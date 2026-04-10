@@ -7,7 +7,7 @@ from pathlib import Path
 
 from .config import load_config
 from .sources import fetch_all
-from .nlp import deduplicate, score_items, find_major_stories, summarize_item, sentiment_summary, sort_sources
+from .nlp import deduplicate, score_items, find_major_stories, summarize_item, sort_sources
 from .render import to_html
 from . import mailer, thumbnails
 
@@ -49,13 +49,10 @@ def main() -> None:
     major = find_major_stories(processed, min_sources=3, max_stories=5)
     print(f"  {len(major)} major stories detected")
 
-    sentiment = sentiment_summary(processed)
-    print(f"  tone: {sentiment['overall']} ({sentiment['score']:+.3f})")
-
     print("Fetching thumbnails...")
     processed = thumbnails.enrich(processed, top_n=3)
 
-    html = to_html(processed, major_stories=major, sentiment=sentiment, top_n=3)
+    html = to_html(processed, major_stories=major, top_n=3)
 
     if not html.strip():
         print("ERROR: render produced empty output.", file=sys.stderr)
