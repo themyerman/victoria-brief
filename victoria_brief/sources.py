@@ -32,7 +32,7 @@ def fetch_rss(url: str, hours: int = 26) -> list[dict]:
             items.append({
                 "title": entry.get("title", "").strip(),
                 "link": link,
-                "summary": _strip_html(raw)[:400],
+                "summary": _strip_html(raw)[:200],
                 "published": pub,
             })
     except Exception as exc:
@@ -48,7 +48,7 @@ def fetch_search(query: str, max_results: int = 6) -> list[dict]:
                 {
                     "title": r.get("title", ""),
                     "link": r.get("href", ""),
-                    "summary": r.get("body", "")[:400],
+                    "summary": r.get("body", "")[:200],
                     "published": None,
                 }
                 for r in ddgs.text(query, max_results=max_results)

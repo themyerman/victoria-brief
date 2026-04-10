@@ -9,7 +9,7 @@ from .config import load_config
 from .sources import fetch_all
 from .nlp import deduplicate, score_items, find_major_stories, summarize_item, sentiment_summary
 from .render import to_html
-from . import mailer
+from . import mailer, thumbnails
 
 
 def main() -> None:
@@ -48,6 +48,9 @@ def main() -> None:
 
     sentiment = sentiment_summary(processed)
     print(f"  tone: {sentiment['overall']} ({sentiment['score']:+.3f})")
+
+    print("Fetching thumbnails...")
+    processed = thumbnails.enrich(processed, top_n=3)
 
     html = to_html(processed, major_stories=major, sentiment=sentiment, top_n=3)
 

@@ -210,7 +210,7 @@ def deduplicate(items: list[dict], threshold: float = 0.70) -> list[dict]:
 # Extractive summarization
 # ---------------------------------------------------------------------------
 
-def summarize_item(item: dict, sentences: int = 2) -> str:
+def summarize_item(item: dict, sentences: int = 1) -> str:
     _ensure_nltk_data()
     from nltk.corpus import stopwords
     from nltk.tokenize import sent_tokenize, word_tokenize
