@@ -77,6 +77,48 @@ def _source_card(name: str, items: list[dict], top_n: int = 3, category: str = "
 
 
 # ---------------------------------------------------------------------------
+# Today at a Glance
+# ---------------------------------------------------------------------------
+
+def _glance_section(
+    sources: dict[str, list[dict]],
+    categories: Optional[dict[str, str]],
+) -> str:
+    """Pick the single top-scored item from each category and render as a
+    bullet digest. Pure data — no LLM required."""
+
+    # Bucket all items by category
+    cat_items: dict[str, list[dict]] = {}
+    for name, items in sources.items():
+        cat = (categories or {}).get(name, "Other")
+        cat_items.setdefault(cat, []).extend(items)
+
+    rows = []
+    for cat in _CATEGORY_ORDER:
+        items = cat_items.get(cat)
+        if not items:
+            continue
+        # Items are already scored; take the highest
+        best = max(items, key=lambda x: x.get("_score", 0))
+        title = best.get("title", "").strip()
+        link = best.get("link", "")
+        if not title:
+            continue
+        anchor = f'<a href="{link}">{title}</a>' if link else title
+        rows.append(
+            f'<li><span class="glance-cat">{cat}</span>{anchor}</li>'
+        )
+
+    if not rows:
+        return ""
+
+    return f"""<section class="glance-section">
+  <h2 class="glance-h2">Today at a glance</h2>
+  <ul class="glance-list">{"".join(rows)}</ul>
+</section>"""
+
+
+# ---------------------------------------------------------------------------
 # Full page
 # ---------------------------------------------------------------------------
 
@@ -116,6 +158,7 @@ def to_html(
     today = datetime.now().strftime("%A, %B %-d, %Y")
 
     major = _major_stories_section(major_stories or [])
+    glance = _glance_section(sources, categories)
     grid = _flat_grid(sources, categories, top_n)
 
     return f"""<!DOCTYPE html>
@@ -140,6 +183,21 @@ def to_html(
   .masthead {{ background: #1a1a2e; color: #fff; padding: 16px 20px; border-radius: 8px; margin-bottom: 16px; }}
   .masthead h1 {{ margin: 0 0 2px; font-size: 1.4em; }}
   .masthead .date {{ color: #aaa; font-size: 0.85em; margin: 0; }}
+
+  /* Today at a glance */
+  .glance-section {{ background: #fff; border: 1px solid #ddd; border-radius: 8px;
+                     padding: 14px 20px; margin-bottom: 16px; }}
+  .glance-h2 {{ margin: 0 0 10px; font-size: 0.75em; text-transform: uppercase;
+                letter-spacing: 0.08em; color: #555; }}
+  .glance-list {{ list-style: none; padding: 0; margin: 0;
+                  display: flex; flex-direction: column; gap: 6px; }}
+  .glance-list li {{ font-size: 0.88em; display: flex; align-items: baseline; gap: 8px; }}
+  .glance-cat {{ flex-shrink: 0; font-size: 0.78em; font-weight: 700;
+                 text-transform: uppercase; letter-spacing: 0.06em;
+                 color: #fff; background: #1a1a2e; padding: 1px 6px;
+                 border-radius: 3px; opacity: 0.8; }}
+  .glance-list a {{ color: #1a1a2e; text-decoration: none; line-height: 1.35; }}
+  .glance-list a:hover {{ color: #1a6b9a; text-decoration: underline; }}
 
   /* Major stories */
   .major-section {{ background: #fff; border: 2px solid #8b0000;
@@ -191,6 +249,7 @@ def to_html(
   <p class="date">{today}</p>
 </div>
 
+{glance}
 {major}
 {grid}
 
