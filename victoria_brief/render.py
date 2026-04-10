@@ -1,7 +1,20 @@
 from __future__ import annotations
 
+from collections import defaultdict
 from datetime import datetime
 from typing import Optional
+
+# Display order for categories. Any category not listed here falls into "Other".
+_CATEGORY_ORDER = [
+    "BC News",
+    "Victoria & Island",
+    "Indigenous",
+    "Jobs & Economy",
+    "Arts & Culture",
+    "Education",
+    "Housing & Transit",
+    "Other",
+]
 
 
 # ---------------------------------------------------------------------------
@@ -67,19 +80,51 @@ def _source_card(name: str, items: list[dict], top_n: int = 3) -> str:
 # Full page
 # ---------------------------------------------------------------------------
 
+def _category_grid(
+    sources: dict[str, list[dict]],
+    categories: Optional[dict[str, str]],
+    top_n: int,
+) -> str:
+    """Group source cards into labelled category sections."""
+    cat_map: dict[str, list[str]] = defaultdict(list)
+    for name in sources:
+        cat = (categories or {}).get(name, "Other")
+        cat_map[cat].append(name)
+
+    # Sort categories by canonical order, unknown ones at the end
+    def cat_sort_key(cat: str) -> int:
+        try:
+            return _CATEGORY_ORDER.index(cat)
+        except ValueError:
+            return len(_CATEGORY_ORDER)
+
+    sections = []
+    for cat in sorted(cat_map, key=cat_sort_key):
+        cards = [
+            _source_card(name, sources[name], top_n)
+            for name in cat_map[cat]
+            if sources.get(name)
+        ]
+        cards = [c for c in cards if c]
+        if not cards:
+            continue
+        sections.append(
+            f'<h2 class="cat-header">{cat}</h2>'
+            f'<div class="grid">{"".join(cards)}</div>'
+        )
+    return "\n".join(sections)
+
+
 def to_html(
     sources: dict[str, list[dict]],
     major_stories: Optional[list[dict]] = None,
     top_n: int = 3,
+    categories: Optional[dict[str, str]] = None,
 ) -> str:
     today = datetime.now().strftime("%A, %B %-d, %Y")
 
     major = _major_stories_section(major_stories or [])
-    grid = "\n".join(
-        _source_card(name, items, top_n)
-        for name, items in sources.items()
-        if items
-    )
+    grid = _category_grid(sources, categories, top_n)
 
     return f"""<!DOCTYPE html>
 <html lang="en"><head>
@@ -139,6 +184,20 @@ def to_html(
   .thumb {{ width: 100%; height: 70px; object-fit: cover; border-radius: 4px;
             display: block; margin-bottom: 5px; }}
   .snip {{ margin: 2px 0 0; color: #666; font-size: 0.82em; line-height: 1.4; }}
+
+  /* Category section headers */
+  .cat-header {{
+    font-size: 0.7em;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: #fff;
+    background: #1a1a2e;
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 4px;
+    margin: 20px 0 10px;
+  }}
 
   .meta {{ color: #aaa; font-size: 0.78em; margin-top: 24px; text-align: center; }}
 </style>

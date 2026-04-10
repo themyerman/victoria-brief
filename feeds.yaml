@@ -19,85 +19,105 @@ sources:
   - name: "CBC British Columbia"
     url: "https://www.cbc.ca/cmlink/rss-canada-britishcolumbia"
     weight: 2.0
+    category: "BC News"
 
   - name: "BC Government News"
     url: "https://news.gov.bc.ca/rss/news"
     weight: 1.8
+    category: "BC News"
 
   - name: "Global News BC"
     url: "https://globalnews.ca/bc/feed/"
     weight: 1.6
+    category: "BC News"
 
   # --- First Nations (high baseline — core interest) ---
   - name: "APTN National News"
     url: "https://www.aptnnews.ca/national-news/feed/"
     weight: 1.8
+    category: "Indigenous"
 
   - name: "CBC Indigenous"
     url: "https://www.cbc.ca/cmlink/rss-cbcindigenous"
     weight: 1.8
+    category: "Indigenous"
 
   - name: "First Nations: Songhees & Esquimalt"
     search: "Songhees Nation OR Esquimalt Nation news announcement"
     weight: 1.6
+    category: "Indigenous"
 
   - name: "First Nations: WSANEC & BC"
     search: "WSANEC OR Saanich Nation OR FNLC BC First Nations news announcement"
     weight: 1.6
+    category: "Indigenous"
 
   # --- Local Victoria / Vancouver Island news ---
   - name: "CHEK News"
     url: "https://www.cheknews.ca/feed/"
     weight: 1.4
+    category: "Victoria & Island"
 
   - name: "Times Colonist"
     url: "https://www.timescolonist.com/rss/news"
     weight: 1.4
+    category: "Victoria & Island"
 
   - name: "Victoria Buzz"
     url: "https://victoriabuzz.com/feed/"
     weight: 1.0
+    category: "Victoria & Island"
 
   - name: "Business Examiner Vancouver Island"
     url: "https://businessexaminer.ca/feed/"
     weight: 1.1
+    category: "Jobs & Economy"
 
   - name: "Douglas Magazine"
     url: "https://douglasmagazine.com/feed/"
     weight: 1.0
+    category: "Victoria & Island"
 
   # --- Tech & Jobs ---
   - name: "BC Tech & Startups"
-    search: "Victoria BC OR Vancouver Island tech startup news"
+    search: "Victoria BC OR Vancouver Island tech startup news announcement"
     weight: 1.2
+    category: "Jobs & Economy"
 
   - name: "Vancouver Island Jobs"
-    search: "Victoria BC technology jobs hiring"
+    search: "Victoria BC OR Vancouver Island hiring jobs 2026 -site:ziprecruiter.com -site:indeed.com -site:linkedin.com -site:glassdoor.com"
     weight: 0.9
+    category: "Jobs & Economy"
 
   # --- Arts & Culture ---
   - name: "BC Arts Council"
     search: "BC Arts Council grant funding announcement"
     weight: 1.0
+    category: "Arts & Culture"
 
   - name: "Victoria Events"
     search: "Victoria BC cultural event this week"
     weight: 0.9
+    category: "Arts & Culture"
 
   # --- University & Research ---
   - name: "UVic News"
     url: "https://www.uvic.ca/news/rss/"
     weight: 1.1
+    category: "Education"
 
   - name: "Camosun & UVic Events"
     search: "Camosun College OR UVic Victoria BC news announcement"
     weight: 0.9
+    category: "Education"
 
   # --- Housing & Ferries ---
   - name: "BC Ferries"
     search: "BC Ferries disruption cancellation schedule change"
     weight: 1.2
+    category: "Housing & Transit"
 
   - name: "Victoria Housing & Real Estate"
-    search: "Victoria BC real estate rental housing market"
+    search: "Victoria BC rental housing market rent prices 2026"
     weight: 1.0
+    category: "Housing & Transit"

@@ -25,7 +25,8 @@ def main() -> None:
     )
     args = parser.parse_args()
 
-    sources_config, notify_list, _ = load_config()
+    sources_config, notify_list, extra = load_config()
+    categories = extra.get("categories", {})
     source_weights = {s["name"]: s.get("weight", 1.0) for s in sources_config}
 
     print("Fetching sources...")
@@ -69,7 +70,7 @@ def main() -> None:
     print("Fetching thumbnails...")
     processed = thumbnails.enrich(processed, top_n=3)
 
-    html = to_html(processed, major_stories=major, top_n=3)
+    html = to_html(processed, major_stories=major, top_n=3, categories=categories)
 
     if not html.strip():
         print("ERROR: render produced empty output.", file=sys.stderr)

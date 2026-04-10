@@ -40,6 +40,16 @@ def fetch_rss(url: str, hours: int = 26) -> list[dict]:
     return items
 
 
+def _is_article_url(url: str) -> bool:
+    """Return True if the URL looks like an article rather than a homepage or wiki page."""
+    from urllib.parse import urlparse
+    parsed = urlparse(url)
+    if "wikipedia.org" in parsed.netloc:
+        return False
+    path_parts = [p for p in parsed.path.split("/") if p]
+    return len(path_parts) >= 1
+
+
 def fetch_search(query: str, max_results: int = 6) -> list[dict]:
     try:
         from ddgs import DDGS
@@ -52,6 +62,7 @@ def fetch_search(query: str, max_results: int = 6) -> list[dict]:
                     "published": None,
                 }
                 for r in ddgs.text(query, max_results=max_results)
+                if _is_article_url(r.get("href", ""))
             ]
     except Exception as exc:
         print(f"  [warn] Search failed for '{query}': {exc}", file=sys.stderr)
