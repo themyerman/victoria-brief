@@ -46,6 +46,23 @@ def main() -> None:
 
     processed = sort_sources(processed, source_weights, top_n=3)
 
+    # Limit grid to 9 cards: up to 8 sources with ≥3 stories + 1 "Other News" catchall
+    # Pinned sources always get their own card regardless of item count
+    TOP_CARDS = 8
+    MIN_ITEMS = 3
+    PINNED = {"Victoria Events", "Victoria Housing & Real Estate"}
+    top = {}
+    rest_items = []
+    for name, items in processed.items():
+        if (name in PINNED or len(items) >= MIN_ITEMS) and len(top) < TOP_CARDS:
+            top[name] = items
+        else:
+            rest_items.extend(items)
+    if rest_items:
+        rest_items = score_items(deduplicate(rest_items))[:6]
+        top["Other News"] = rest_items
+    processed = top
+
     major = find_major_stories(processed, min_sources=3, max_stories=5)
     print(f"  {len(major)} major stories detected")
 
