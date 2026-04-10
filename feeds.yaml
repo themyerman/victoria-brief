@@ -3,6 +3,11 @@
 # Each source needs either `url` (RSS feed) or `search` (DuckDuckGo query).
 # `name` is how the source appears as a section header in the digest.
 #
+
+notify:
+  - myerman@gmail.com
+
+
 # Optional `weight` (default 1.0) sets a baseline priority multiplier.
 # Sources are sorted dynamically each run by: weight × gravity_score,
 # where gravity_score reflects how "heavy" today's stories are

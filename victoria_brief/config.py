@@ -12,6 +12,6 @@ def load_config(path: "Union[str, Path]" = "feeds.yaml") -> "tuple[dict, list, d
         cfg = yaml.safe_load(f)
     return (
         cfg.get("sources", []),
-        [],   # reserved
+        cfg.get("notify", []),
         {},   # reserved
     )

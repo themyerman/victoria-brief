@@ -25,7 +25,7 @@ def main() -> None:
     )
     args = parser.parse_args()
 
-    sources_config, _, _ = load_config()
+    sources_config, notify_list, _ = load_config()
     source_weights = {s["name"]: s.get("weight", 1.0) for s in sources_config}
 
     print("Fetching sources...")
@@ -86,3 +86,9 @@ def main() -> None:
             dest = dest / "victoria-daily-brief.html"
         dest.write_text(html, encoding="utf-8")
         print(f"Saved: {dest}")
+
+    if notify_list:
+        try:
+            mailer.notify(notify_list)
+        except Exception as exc:
+            print(f"  [warn] Notification failed: {exc}", file=sys.stderr)
