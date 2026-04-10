@@ -31,3 +31,16 @@ curl -s --ftp-ssl --insecure --no-sessionid -T "$BRIEF" \
   --user "ftp2@myerman.art:$FTP_PASS" >> "$LOG" 2>&1
 
 echo "Done. Published to myerman.art/victoria-brief/" >> "$LOG"
+
+# iMessage notifications
+MSG="Good morning! Today's Victoria Brief is ready: https://myerman.art/victoria-brief/"
+for NUMBER in "+17202928866" "+17204591466"; do
+  osascript << APPLESCRIPT >> "$LOG" 2>&1
+tell application "Messages"
+  set targetService to 1st service whose service type = iMessage
+  set targetBuddy to participant "$NUMBER" of targetService
+  send "$MSG" to targetBuddy
+end tell
+APPLESCRIPT
+  echo "  iMessage sent to $NUMBER" >> "$LOG"
+done
