@@ -1,10 +1,9 @@
 from __future__ import annotations
 
-from collections import defaultdict
 from datetime import datetime
 from typing import Optional
 
-# Display order for categories. Any category not listed here falls into "Other".
+# Display order for categories — cards are sorted by this within the flat grid.
 _CATEGORY_ORDER = [
     "BC News",
     "Victoria & Island",
@@ -53,7 +52,7 @@ def _major_stories_section(stories: list[dict]) -> str:
 # Source card (grid item)
 # ---------------------------------------------------------------------------
 
-def _source_card(name: str, items: list[dict], top_n: int = 3) -> str:
+def _source_card(name: str, items: list[dict], top_n: int = 3, category: str = "") -> str:
     if not items:
         return ""
     stories_html = []
@@ -70,8 +69,9 @@ def _source_card(name: str, items: list[dict], top_n: int = 3) -> str:
   <strong>{anchor}</strong>
   {snippet}
 </li>""")
+    badge = f'<span class="cat-badge">{category}</span>' if category else ""
     return f"""<div class="card">
-  <h3>{name}</h3>
+  <h3><span class="card-source">{name}</span>{badge}</h3>
   <ul>{"".join(stories_html)}</ul>
 </div>"""
 
@@ -80,39 +80,31 @@ def _source_card(name: str, items: list[dict], top_n: int = 3) -> str:
 # Full page
 # ---------------------------------------------------------------------------
 
-def _category_grid(
+def _flat_grid(
     sources: dict[str, list[dict]],
     categories: Optional[dict[str, str]],
     top_n: int,
 ) -> str:
-    """Group source cards into labelled category sections."""
-    cat_map: dict[str, list[str]] = defaultdict(list)
-    for name in sources:
-        cat = (categories or {}).get(name, "Other")
-        cat_map[cat].append(name)
+    """Render all source cards in a single flat grid, sorted by category order.
+    Cards flow naturally into columns with no per-category grid breaks."""
 
-    # Sort categories by canonical order, unknown ones at the end
-    def cat_sort_key(cat: str) -> int:
+    def sort_key(name: str) -> int:
+        cat = (categories or {}).get(name, "Other")
         try:
             return _CATEGORY_ORDER.index(cat)
         except ValueError:
             return len(_CATEGORY_ORDER)
 
-    sections = []
-    for cat in sorted(cat_map, key=cat_sort_key):
-        cards = [
-            _source_card(name, sources[name], top_n)
-            for name in cat_map[cat]
-            if sources.get(name)
-        ]
-        cards = [c for c in cards if c]
-        if not cards:
-            continue
-        sections.append(
-            f'<h2 class="cat-header">{cat}</h2>'
-            f'<div class="grid">{"".join(cards)}</div>'
-        )
-    return "\n".join(sections)
+    cards = []
+    for name in sorted(sources.keys(), key=sort_key):
+        cat = (categories or {}).get(name, "Other")
+        card = _source_card(name, sources[name], top_n, category=cat)
+        if card:
+            cards.append(card)
+
+    if not cards:
+        return ""
+    return f'<div class="grid">{"".join(cards)}</div>'
 
 
 def to_html(
@@ -124,7 +116,7 @@ def to_html(
     today = datetime.now().strftime("%A, %B %-d, %Y")
 
     major = _major_stories_section(major_stories or [])
-    grid = _category_grid(sources, categories, top_n)
+    grid = _flat_grid(sources, categories, top_n)
 
     return f"""<!DOCTYPE html>
 <html lang="en"><head>
@@ -176,7 +168,12 @@ def to_html(
            padding: 14px; display: flex; flex-direction: column; }}
   .card h3 {{ margin: 0 0 10px; font-size: 0.75em; text-transform: uppercase;
               letter-spacing: 0.06em; color: #555; border-bottom: 1px solid #eee;
-              padding-bottom: 6px; }}
+              padding-bottom: 6px; display: flex; justify-content: space-between;
+              align-items: center; gap: 6px; }}
+  .card-source {{ flex: 1; min-width: 0; }}
+  .cat-badge {{ flex-shrink: 0; font-size: 0.85em; font-weight: 600; color: #fff;
+                background: #1a1a2e; padding: 1px 6px; border-radius: 3px;
+                letter-spacing: 0.04em; opacity: 0.75; }}
   .card ul {{ list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 10px; }}
   .card li {{ font-size: 0.88em; }}
   .card li strong a {{ color: #1a1a2e; text-decoration: none; line-height: 1.35; }}
@@ -184,20 +181,6 @@ def to_html(
   .thumb {{ width: 100%; height: 70px; object-fit: cover; border-radius: 4px;
             display: block; margin-bottom: 5px; }}
   .snip {{ margin: 2px 0 0; color: #666; font-size: 0.82em; line-height: 1.4; }}
-
-  /* Category section headers */
-  .cat-header {{
-    font-size: 0.7em;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-    color: #fff;
-    background: #1a1a2e;
-    display: inline-block;
-    padding: 3px 10px;
-    border-radius: 4px;
-    margin: 20px 0 10px;
-  }}
 
   .meta {{ color: #aaa; font-size: 0.78em; margin-top: 24px; text-align: center; }}
 </style>
@@ -209,9 +192,7 @@ def to_html(
 </div>
 
 {major}
-<div class="grid">
 {grid}
-</div>
 
 <p class="meta">Generated by victoria-brief.</p>
 </body></html>"""
