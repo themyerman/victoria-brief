@@ -33,11 +33,14 @@ def main() -> None:
     print(f"  {total} items across {len(raw_sources)} sources")
 
     print("Running NLP pipeline...")
+    # Build a set of search-based source names for stricter relevance filtering
+    search_sources = {s["name"] for s in sources_config if "search" in s}
+
     processed: dict[str, list[dict]] = {}
     for name, items in raw_sources.items():
         items = deduplicate(items)
         items = [dict(item, summary=summarize_item(item)) for item in items]
-        items = score_items(items)
+        items = score_items(items, drop_zero_local=(name in search_sources))
         processed[name] = items
 
     major = find_major_stories(processed, min_sources=3, max_stories=5)

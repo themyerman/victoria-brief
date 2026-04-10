@@ -41,8 +41,8 @@ sources:
   - name: "First Nations: Songhees & Esquimalt"
     search: "Songhees Nation OR Esquimalt Nation news announcement"
 
-  - name: "First Nations: W̱SÁNEĆ & BC"
-    search: "W̱SÁNEĆ peoples OR FNLC BC First Nations news"
+  - name: "First Nations: WSANEC & BC"
+    search: "WSANEC OR Saanich Nation OR FNLC BC First Nations news announcement"
 
   # --- Tech & Jobs ---
   - name: "BC Tech & Startups"

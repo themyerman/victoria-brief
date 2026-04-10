@@ -29,11 +29,11 @@ def _ensure_nltk_data() -> None:
 
 _LOCAL_TERMS = {
     "victoria", "saanich", "esquimalt", "langford", "colwood", "sooke",
-    "sidney", "oak bay", "esquimalt", "nanaimo", "comox", "courtenay",
+    "sidney", "oak bay", "nanaimo", "comox", "courtenay",
     "campbell river", "port alberni", "tofino", "ucluelet",
     "vancouver island", "island", "bc", "british columbia",
-    "songhees", "wsanec", "w̱sáneć", "lekwungen", "saanich",
-    "uvic", "camosun", "bc ferries",
+    "songhees", "wsanec", "lekwungen", "first nations", "indigenous",
+    "fnlc", "treaty", "reconciliation", "uvic", "camosun", "bc ferries",
 }
 
 def _local_score(item: dict) -> float:
@@ -63,16 +63,20 @@ def _vader_magnitude(item: dict) -> float:
     return abs(sia.polarity_scores(text)["compound"])
 
 
-def score_items(items: list[dict]) -> list[dict]:
+def score_items(items: list[dict], drop_zero_local: bool = False) -> list[dict]:
     """
     Score and sort items by composite heuristic:
       0.4 * recency + 0.4 * local_relevance + 0.2 * vader_magnitude
     Returns items sorted descending by score, with '_score' attached.
+    If drop_zero_local=True, items with no local relevance signal are removed.
     """
     scored = []
     for item in items:
+        local = _local_score(item)
+        if drop_zero_local and local == 0.0:
+            continue
         s = (0.4 * _recency_score(item) +
-             0.4 * _local_score(item) +
+             0.4 * local +
              0.2 * _vader_magnitude(item))
         scored.append(dict(item, _score=round(s, 4)))
     return sorted(scored, key=lambda x: x["_score"], reverse=True)
