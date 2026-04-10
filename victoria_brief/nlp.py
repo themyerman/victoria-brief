@@ -173,6 +173,77 @@ def find_major_stories(
 
 
 # ---------------------------------------------------------------------------
+# Source gravity scoring + sorting
+# ---------------------------------------------------------------------------
+
+_GRAVITY_TERMS: dict[str, float] = {
+    # National / federal
+    "parliament":       1.5, "senate":          1.5, "prime minister":  1.5,
+    "federal":          1.3, "supreme court":   2.0, "national":        1.2,
+    "house of commons": 1.5, "trudeau":         1.3, "carney":          1.3,
+    "rcmp":             1.3, "inquiry":         1.4, "tribunal":        1.4,
+
+    # BC politics
+    "legislature":      1.4, "provincial":      1.2, "minister":        1.2,
+    "eby":              1.3, "nanaimo":         1.0, "bill":            1.1,
+    "policy":           1.0, "election":        1.5, "budget":          1.4,
+    "referendum":       1.5, "cabinet":         1.3,
+
+    # Big story signals
+    "breaking":         1.5, "emergency":       1.5, "death":           1.4,
+    "wildfire":         1.4, "flood":           1.4, "earthquake":      1.6,
+    "arrest":           1.3, "verdict":         1.4, "shooting":        1.5,
+    "evacuation":       1.5, "closure":         1.2, "strike":          1.3,
+    "protest":          1.2, "scandal":         1.4, "resignation":     1.4,
+
+    # First Nations gravity
+    "treaty":           1.4, "reconciliation":  1.3, "title":           1.3,
+    "rights":           1.2, "landback":        1.4, "residential":     1.5,
+    "inquiry":          1.4,
+}
+
+
+def _gravity_score(items: list[dict], top_n: int = 3) -> float:
+    """
+    Score a source's top_n stories for 'heavy news' signal.
+    Returns a multiplier >= 1.0; higher = more important today.
+    """
+    if not items:
+        return 1.0
+
+    best = 1.0
+    for item in items[:top_n]:
+        text = (item.get("title", "") + " " + item.get("summary", "")).lower()
+        score = 1.0
+        for term, boost in _GRAVITY_TERMS.items():
+            if term in text:
+                score = max(score, boost)
+        best = max(best, score)
+    return best
+
+
+def sort_sources(
+    sources: dict[str, list[dict]],
+    weights: dict[str, float],
+    top_n: int = 3,
+) -> dict[str, list[dict]]:
+    """
+    Sort sources by (base_weight × gravity_score), highest first.
+    Sources with no items sort to the bottom.
+    """
+    def sort_key(name: str) -> float:
+        items = sources.get(name, [])
+        if not items:
+            return -1.0
+        base = weights.get(name, 1.0)
+        gravity = _gravity_score(items, top_n)
+        return base * gravity
+
+    sorted_names = sorted(sources.keys(), key=sort_key, reverse=True)
+    return {name: sources[name] for name in sorted_names}
+
+
+# ---------------------------------------------------------------------------
 # Within-source deduplication
 # ---------------------------------------------------------------------------
 

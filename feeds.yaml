@@ -2,72 +2,97 @@
 #
 # Each source needs either `url` (RSS feed) or `search` (DuckDuckGo query).
 # `name` is how the source appears as a section header in the digest.
+#
+# Optional `weight` (default 1.0) sets a baseline priority multiplier.
+# Sources are sorted dynamically each run by: weight × gravity_score,
+# where gravity_score reflects how "heavy" today's stories are
+# (national news, BC politics, supreme court, breaking events, etc.).
 
 sources:
+
+  # --- BC-wide / heavy news (high baseline weight) ---
+  - name: "CBC British Columbia"
+    url: "https://www.cbc.ca/cmlink/rss-canada-britishcolumbia"
+    weight: 2.0
+
+  - name: "BC Government News"
+    url: "https://news.gov.bc.ca/rss/news"
+    weight: 1.8
+
+  - name: "Global News BC"
+    url: "https://globalnews.ca/bc/feed/"
+    weight: 1.6
+
+  # --- First Nations (high baseline — core interest) ---
+  - name: "APTN National News"
+    url: "https://www.aptnnews.ca/national-news/feed/"
+    weight: 1.8
+
+  - name: "CBC Indigenous"
+    url: "https://www.cbc.ca/cmlink/rss-cbcindigenous"
+    weight: 1.8
+
+  - name: "First Nations: Songhees & Esquimalt"
+    search: "Songhees Nation OR Esquimalt Nation news announcement"
+    weight: 1.6
+
+  - name: "First Nations: WSANEC & BC"
+    search: "WSANEC OR Saanich Nation OR FNLC BC First Nations news announcement"
+    weight: 1.6
 
   # --- Local Victoria / Vancouver Island news ---
   - name: "CHEK News"
     url: "https://www.cheknews.ca/feed/"
+    weight: 1.4
 
   - name: "Times Colonist"
     url: "https://www.timescolonist.com/rss/news"
+    weight: 1.4
 
   - name: "Victoria Buzz"
     url: "https://victoriabuzz.com/feed/"
+    weight: 1.0
 
   - name: "Business Examiner Vancouver Island"
     url: "https://businessexaminer.ca/feed/"
+    weight: 1.1
 
   - name: "Douglas Magazine"
     url: "https://douglasmagazine.com/feed/"
-
-  # --- BC-wide ---
-  - name: "CBC British Columbia"
-    url: "https://www.cbc.ca/cmlink/rss-canada-britishcolumbia"
-
-  - name: "Global News BC"
-    url: "https://globalnews.ca/bc/feed/"
-
-  - name: "BC Government News"
-    url: "https://news.gov.bc.ca/rss/news"
-
-  # --- First Nations ---
-  - name: "APTN National News"
-    url: "https://www.aptnnews.ca/national-news/feed/"
-
-  - name: "CBC Indigenous"
-    url: "https://www.cbc.ca/cmlink/rss-cbcindigenous"
-
-  - name: "First Nations: Songhees & Esquimalt"
-    search: "Songhees Nation OR Esquimalt Nation news announcement"
-
-  - name: "First Nations: WSANEC & BC"
-    search: "WSANEC OR Saanich Nation OR FNLC BC First Nations news announcement"
+    weight: 1.0
 
   # --- Tech & Jobs ---
   - name: "BC Tech & Startups"
     search: "Victoria BC OR Vancouver Island tech startup news"
+    weight: 1.2
 
   - name: "Vancouver Island Jobs"
     search: "Victoria BC technology jobs hiring"
+    weight: 0.9
 
   # --- Arts & Culture ---
   - name: "BC Arts Council"
     search: "BC Arts Council grant funding announcement"
+    weight: 1.0
 
   - name: "Victoria Events"
     search: "Victoria BC cultural event this week"
+    weight: 0.9
 
   # --- University & Research ---
   - name: "UVic News"
     url: "https://www.uvic.ca/news/rss/"
+    weight: 1.1
 
   - name: "Camosun & UVic Events"
     search: "Camosun College OR UVic Victoria BC news announcement"
+    weight: 0.9
 
   # --- Housing & Ferries ---
   - name: "BC Ferries"
     search: "BC Ferries disruption cancellation schedule change"
+    weight: 1.2
 
   - name: "Victoria Housing & Real Estate"
     search: "Victoria BC real estate rental housing market"
+    weight: 1.0

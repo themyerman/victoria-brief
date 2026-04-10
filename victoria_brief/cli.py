@@ -7,7 +7,7 @@ from pathlib import Path
 
 from .config import load_config
 from .sources import fetch_all
-from .nlp import deduplicate, score_items, find_major_stories, summarize_item, sentiment_summary
+from .nlp import deduplicate, score_items, find_major_stories, summarize_item, sentiment_summary, sort_sources
 from .render import to_html
 from . import mailer, thumbnails
 
@@ -26,6 +26,7 @@ def main() -> None:
     args = parser.parse_args()
 
     sources_config, _, _ = load_config()
+    source_weights = {s["name"]: s.get("weight", 1.0) for s in sources_config}
 
     print("Fetching sources...")
     raw_sources = fetch_all(sources_config)
@@ -42,6 +43,8 @@ def main() -> None:
         items = [dict(item, summary=summarize_item(item)) for item in items]
         items = score_items(items, drop_zero_local=(name in search_sources))
         processed[name] = items
+
+    processed = sort_sources(processed, source_weights, top_n=3)
 
     major = find_major_stories(processed, min_sources=3, max_stories=5)
     print(f"  {len(major)} major stories detected")
