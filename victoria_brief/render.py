@@ -39,27 +39,33 @@ _CATEGORY_ORDER = [
 # Major stories (full-width)
 # ---------------------------------------------------------------------------
 
-def _major_stories_section(stories: list[dict], photo: Optional[dict] = None) -> str:
+def _photos_panel(photo_list: list) -> str:
+    """2×2 grid of Victoria nature photos with photographer credits."""
+    if not photo_list:
+        return ""
+    cells = []
+    for p in photo_list[:4]:
+        url    = p.get("url", "")
+        link   = p.get("link", "")
+        title  = p.get("title", "")
+        author = p.get("author", "")
+        if not url:
+            continue
+        img = f'<img class="pgrid-img" src="{url}" alt="{title}">'
+        wrapped = f'<a href="{link}" target="_blank">{img}</a>' if link else img
+        credit = f'<span class="pgrid-credit">📷 {author}</span>' if author else ""
+        cells.append(f'<div class="pgrid-cell">{wrapped}{credit}</div>')
+    if not cells:
+        return ""
+    return f"""<div class="photos-panel">
+  <h2 class="photos-h2">&#127758; Victoria</h2>
+  <div class="pgrid">{"".join(cells)}</div>
+</div>"""
+
+
+def _major_stories_section(stories: list[dict], photo_list: Optional[list] = None) -> str:
     if not stories:
         return ""
-
-    # Hero: Flickr photo if available, otherwise first story thumbnail
-    hero_html = ""
-    if photo and photo.get("url"):
-        img = f'<img class="major-hero" src="{photo["url"]}" alt="{photo.get("title", "")}">'
-        caption = ""
-        if photo.get("author"):
-            caption = f'<span class="major-hero-credit">📷 {photo["author"]}</span>'
-        inner = f'<a href="{photo["link"]}" class="major-hero-wrap" target="_blank">{img}</a>' if photo.get("link") else img
-        hero_html = f'<div class="major-hero-col">{inner}{caption}</div>'
-    else:
-        for s in stories:
-            src = s.get("thumbnail", "")
-            link = s.get("link", "")
-            if src:
-                img = f'<img class="major-hero" src="{src}" alt="">'
-                hero_html = f'<div class="major-hero-col"><a href="{link}" class="major-hero-wrap">{img}</a></div>' if link else f'<div class="major-hero-col">{img}</div>'
-                break
 
     items_html = []
     for s in stories:
@@ -83,13 +89,15 @@ def _major_stories_section(stories: list[dict], photo: Optional[dict] = None) ->
   </div>
 </li>""")
 
+    photos_html = _photos_panel(photo_list or [])
+
     return f"""<section class="major-section">
   <div class="major-inner">
     <div class="major-stories-col">
       <h2 class="major-h2">&#9733; Major Stories</h2>
       <ul class="major-list">{"".join(items_html)}</ul>
     </div>
-    {hero_html}
+    {photos_html}
   </div>
 </section>"""
 
@@ -331,11 +339,11 @@ def to_html(
     forecast: Optional[list] = None,
     keywords: Optional[list] = None,
     entities: Optional[dict] = None,
-    photo: Optional[dict] = None,
+    photos: Optional[list] = None,
 ) -> str:
     today = datetime.now().strftime("%A, %B %-d, %Y")
 
-    major = _major_stories_section(major_stories or [], photo=photo)
+    major = _major_stories_section(major_stories or [], photo_list=photos)
     grid = _flat_grid(sources, categories, top_n)
     weather_html = _weather_widget(forecast or [])
     kw_html = _keyword_strip(keywords or [])
@@ -393,11 +401,19 @@ def to_html(
                     border-radius: 8px; padding: 16px 20px; margin-bottom: 20px; }}
   .major-inner {{ display: flex; gap: 16px; align-items: stretch; }}
   .major-stories-col {{ flex: 1; min-width: 0; }}
-  .major-hero-col {{ flex-shrink: 0; width: 260px; display: flex; flex-direction: column; gap: 4px; }}
-  .major-hero-wrap {{ display: block; }}
-  .major-hero {{ width: 260px; height: 240px; object-fit: cover; border-radius: 6px; display: block; }}
-  .major-hero-credit {{ font-size: 0.7em; color: #999; text-align: right; }}
-  @media (max-width: 650px) {{ .major-hero-col {{ display: none; }} }}
+  /* Photos panel */
+  .photos-panel {{ flex-shrink: 0; width: 280px; display: flex; flex-direction: column; gap: 8px; }}
+  .photos-h2 {{ margin: 0 0 6px; font-size: 0.75em; text-transform: uppercase;
+                letter-spacing: 0.08em; color: #1a1a2e; }}
+  .pgrid {{ display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }}
+  .pgrid-cell {{ position: relative; overflow: hidden; border-radius: 5px; }}
+  .pgrid-img {{ width: 100%; height: 110px; object-fit: cover; display: block;
+                transition: transform 0.2s; }}
+  .pgrid-cell:hover .pgrid-img {{ transform: scale(1.04); }}
+  .pgrid-credit {{ display: block; font-size: 0.65em; color: #999;
+                   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+                   margin-top: 2px; }}
+  @media (max-width: 700px) {{ .photos-panel {{ display: none; }} }}
   .major-h2 {{ margin: 0 0 12px; font-size: 0.85em; text-transform: uppercase;
                letter-spacing: 0.06em; color: #8b0000; }}
   .major-list {{ list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 10px; }}

@@ -74,14 +74,14 @@ def main() -> None:
     print("Fetching weather...")
     forecast = weather.fetch_forecast()
 
-    print("Fetching photo of the day...")
-    photo = photos.fetch_photo()
+    print("Fetching photos...")
+    photo_list = photos.fetch_photos(n=4)
 
     print("Extracting keywords and entities...")
     keywords = top_keywords(processed)
     entities = extract_entities(processed)
 
-    html = to_html(processed, major_stories=major, top_n=3, categories=categories, forecast=forecast, keywords=keywords, entities=entities, photo=photo)
+    html = to_html(processed, major_stories=major, top_n=3, categories=categories, forecast=forecast, keywords=keywords, entities=entities, photos=photo_list)
 
     if not html.strip():
         print("ERROR: render produced empty output.", file=sys.stderr)

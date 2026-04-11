@@ -47,38 +47,49 @@ def _image_url(entry) -> str:
     return ""
 
 
-def fetch_photo() -> dict | None:
+def _entry_to_dict(entry) -> dict:
+    return {
+        "url":    _image_url(entry),
+        "title":  entry.get("title", ""),
+        "author": _clean_author(entry.get("author", "")),
+        "link":   entry.get("link", ""),
+    }
+
+
+def fetch_photos(n: int = 4) -> list[dict]:
     """
-    Fetch a random recent Victoria BC photo from Flickr's public tag feeds.
-    Returns a dict with: url, title, author, link — or None on failure.
-    Tries all feeds in random order and picks from the top 20 results.
+    Fetch n Victoria BC nature photos from Flickr, one from each of n
+    different randomly-chosen feeds for maximum visual variety.
+    Returns a list of dicts with: url, title, author, link.
     """
     try:
         import feedparser
     except ImportError:
         print("  [warn] feedparser not available for photos", file=sys.stderr)
-        return None
+        return []
 
     feeds = _FEEDS.copy()
     random.shuffle(feeds)
 
+    photos = []
+    seen_urls: set[str] = set()
+
     for feed_url in feeds:
+        if len(photos) >= n:
+            break
         try:
             parsed = feedparser.parse(feed_url)
             candidates = [
                 e for e in parsed.entries[:20]
-                if _image_url(e)
+                if _image_url(e) and _image_url(e) not in seen_urls
             ]
             if not candidates:
                 continue
             entry = random.choice(candidates)
-            return {
-                "url":    _image_url(entry),
-                "title":  entry.get("title", ""),
-                "author": _clean_author(entry.get("author", "")),
-                "link":   entry.get("link", ""),
-            }
+            p = _entry_to_dict(entry)
+            seen_urls.add(p["url"])
+            photos.append(p)
         except Exception as exc:
-            print(f"  [warn] Flickr feed failed ({feed_url}): {exc}", file=sys.stderr)
+            print(f"  [warn] Flickr feed failed: {exc}", file=sys.stderr)
 
-    return None
+    return photos
