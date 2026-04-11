@@ -4,12 +4,25 @@ import random
 import re
 import sys
 
-# Tag searches to rotate through — variety keeps the hero image fresh
+# Nature/landscape focused tag searches for Victoria BC & Vancouver Island.
+# tagmode=all requires ALL listed tags to be present — much more targeted.
+_BASE = "https://www.flickr.com/services/feeds/photos_public.gne?format=rss2"
 _FEEDS = [
-    "https://www.flickr.com/services/feeds/photos_public.gne?tags=victoria+bc&format=rss2",
-    "https://www.flickr.com/services/feeds/photos_public.gne?tags=victoria+british+columbia&format=rss2",
-    "https://www.flickr.com/services/feeds/photos_public.gne?tags=inner+harbour+victoria&format=rss2",
-    "https://www.flickr.com/services/feeds/photos_public.gne?tags=victoria+canada&format=rss2",
+    f"{_BASE}&tags=victoria,bc,landscape&tagmode=all",
+    f"{_BASE}&tags=victoria,bc,nature&tagmode=all",
+    f"{_BASE}&tags=victoria,bc,ocean&tagmode=all",
+    f"{_BASE}&tags=victoria,bc,whale&tagmode=all",
+    f"{_BASE}&tags=vancouver+island,landscape",
+    f"{_BASE}&tags=vancouver+island,nature",
+    f"{_BASE}&tags=vancouver+island,hiking",
+    f"{_BASE}&tags=vancouver+island,mountains",
+    f"{_BASE}&tags=vancouver+island,ocean",
+    f"{_BASE}&tags=juan+de+fuca,trail&tagmode=all",
+    f"{_BASE}&tags=butchart+gardens,victoria&tagmode=all",
+    f"{_BASE}&tags=malahat,bc&tagmode=all",
+    f"{_BASE}&tags=tofino,bc,landscape&tagmode=all",
+    f"{_BASE}&tags=victoria,bc,trail&tagmode=all",
+    f"{_BASE}&tags=saanich,bc,nature&tagmode=all",
 ]
 
 # Flickr author field looks like "nobody@flickr.com (Real Name)" — extract the name
