@@ -267,6 +267,145 @@ def deduplicate(items: list[dict], threshold: float = 0.70) -> list[dict]:
 
 
 # ---------------------------------------------------------------------------
+# TF-IDF keyword extraction
+# ---------------------------------------------------------------------------
+
+_EXTRA_STOPWORDS = {
+    "said", "say", "says", "bc", "british", "columbia", "new", "like", "get",
+    "make", "year", "one", "two", "three", "first", "last", "also", "just",
+    "use", "used", "time", "day", "week", "month", "people", "need", "know",
+    "going", "way", "good", "work", "including", "following",
+}
+
+
+def top_keywords(sources: dict, top_n: int = 10) -> list[str]:
+    """
+    Pool all item titles + summaries from sources dict, run TF-IDF, return
+    top_n keyword terms (unigrams and bigrams).
+    Returns [] on any failure.
+    """
+    try:
+        from sklearn.feature_extraction.text import TfidfVectorizer
+        import numpy as np
+    except ImportError:
+        return []
+
+    try:
+        docs = []
+        for items in sources.values():
+            for item in items:
+                text = (item.get("title", "") + " " + item.get("summary", "")).strip()
+                if text:
+                    docs.append(text)
+
+        if len(docs) < 2:
+            return []
+
+        vec = TfidfVectorizer(
+            stop_words="english",
+            ngram_range=(1, 2),
+            min_df=2,
+            max_features=300,
+        )
+        tfidf = vec.fit_transform(docs)
+        scores = np.asarray(tfidf.sum(axis=0)).flatten()
+        terms = vec.get_feature_names_out()
+
+        ranked = sorted(zip(scores, terms), reverse=True)
+        result = []
+        for _, term in ranked:
+            if len(result) >= top_n:
+                break
+            if len(term) < 4:
+                continue
+            words = term.split()
+            if any(w in _EXTRA_STOPWORDS for w in words):
+                continue
+            result.append(term)
+
+        return result
+    except Exception:
+        return []
+
+
+# ---------------------------------------------------------------------------
+# Named entity recognition
+# ---------------------------------------------------------------------------
+
+_SKIP_NAMES = {
+    "bc", "b.c.", "british columbia", "victoria", "canada", "canadian",
+    "vancouver island", "province", "government", "minister", "premier",
+    "court", "police", "rcmp", "news", "report", "island", "columbia",
+}
+
+
+def extract_entities(sources: dict, min_count: int = 2) -> dict:
+    """
+    Run NLTK NER on all item titles + summaries. Returns:
+        {"people": [...], "places": [...], "orgs": [...]}
+    Each list is filtered to names with count >= min_count.
+    Returns {"people":[],"places":[],"orgs":[]} on any failure.
+    """
+    empty = {"people": [], "places": [], "orgs": []}
+    try:
+        import nltk
+        from collections import Counter
+
+        for pkg, path in [
+            ("maxent_ne_chunker", "chunkers/maxent_ne_chunker.zip"),
+            ("words",             "corpora/words.zip"),
+            ("averaged_perceptron_tagger_eng", "taggers/averaged_perceptron_tagger_eng.zip"),
+        ]:
+            try:
+                nltk.data.find(path)
+            except LookupError:
+                nltk.download(pkg, quiet=True)
+
+        people_ctr: Counter = Counter()
+        places_ctr: Counter = Counter()
+        orgs_ctr:   Counter = Counter()
+
+        for items in sources.values():
+            for item in items:
+                text = (item.get("title", "") + " " + item.get("summary", "")).strip()
+                if not text:
+                    continue
+                try:
+                    tokens = nltk.word_tokenize(text)
+                    tagged = nltk.pos_tag(tokens)
+                    chunked = nltk.ne_chunk(tagged)
+                    for subtree in chunked:
+                        if not hasattr(subtree, "label"):
+                            continue
+                        name = " ".join(w for w, _ in subtree.leaves()).strip()
+                        name_lower = name.lower()
+                        if len(name) < 3:
+                            continue
+                        if name_lower in _SKIP_NAMES:
+                            continue
+                        label = subtree.label()
+                        if label == "PERSON":
+                            people_ctr[name] += 1
+                        elif label == "GPE":
+                            places_ctr[name] += 1
+                        elif label == "ORGANIZATION":
+                            orgs_ctr[name] += 1
+                except Exception:
+                    continue
+
+        def _filter(ctr: Counter, top: int) -> list[str]:
+            return [name for name, cnt in ctr.most_common(top) if cnt >= min_count]
+
+        return {
+            "people": _filter(people_ctr, 7),
+            "places": _filter(places_ctr, 8),
+            "orgs":   _filter(orgs_ctr,   6),
+        }
+    except Exception:
+        return empty
+
+
+# ---------------------------------------------------------------------------
 # Extractive summarization
 # ---------------------------------------------------------------------------
 

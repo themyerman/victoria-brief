@@ -3,6 +3,25 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Optional
 
+# ---------------------------------------------------------------------------
+# Helpers
+# ---------------------------------------------------------------------------
+
+def _rel_time(published) -> str:
+    if not published:
+        return ""
+    from datetime import datetime, timezone
+    pub_dt = datetime(*published[:6], tzinfo=timezone.utc)
+    age_h = (datetime.now(timezone.utc) - pub_dt).total_seconds() / 3600
+    if age_h < 1:
+        return f"{int(age_h * 60)}m"
+    if age_h < 24:
+        return f"{int(age_h)}h"
+    if age_h < 48:
+        return "1d"
+    return ""
+
+
 # Display order for categories — cards are sorted by this within the flat grid.
 _CATEGORY_ORDER = [
     "BC News",
@@ -62,11 +81,13 @@ def _source_card(name: str, items: list[dict], top_n: int = 3, category: str = "
         summary = (item.get("summary", "") or "")[:110].strip()
         thumbnail = item.get("thumbnail", "")
         anchor = f'<a href="{link}">{title}</a>' if link else title
+        age = _rel_time(item.get("published"))
+        age_html = f'<span class="age">{age}</span>' if age else ""
         thumb_html = f'<img class="thumb" src="{thumbnail}" alt="">' if thumbnail else ""
         snippet = f"<p class='snip'>{summary}</p>" if summary else ""
         stories_html.append(f"""<li>
   {thumb_html}
-  <strong>{anchor}</strong>
+  <strong>{anchor}{age_html}</strong>
   {snippet}
 </li>""")
     badge = f'<span class="cat-badge">{category}</span>' if category else ""
@@ -177,6 +198,73 @@ def _glance_section(
 
 
 # ---------------------------------------------------------------------------
+# Weather widget
+# ---------------------------------------------------------------------------
+
+def _weather_widget(forecast: list) -> str:
+    if not forecast:
+        return ""
+    days_html = []
+    for day in forecast:
+        label     = day.get("label", "")
+        icon      = day.get("icon", "")
+        desc      = day.get("desc", "")
+        high_c    = day.get("high_c", 0)
+        low_c     = day.get("low_c", 0)
+        high_f    = day.get("high_f", 0)
+        low_f     = day.get("low_f", 0)
+        precip    = day.get("precip_pct", 0)
+        rain_html = f'<div class="wx-rain">&#x1F4A7; {precip}%</div>' if precip > 10 else ""
+        days_html.append(
+            f'<div class="wx-day">'
+            f'<div class="wx-label">{label}</div>'
+            f'<div class="wx-icon">{icon}</div>'
+            f'<div class="wx-desc">{desc}</div>'
+            f'<div class="wx-temp">{high_c}°C / {low_c}°C &nbsp; {high_f}°F / {low_f}°F</div>'
+            f'{rain_html}'
+            f'</div>'
+        )
+    return f'<div class="wx-bar">{"".join(days_html)}</div>'
+
+
+# ---------------------------------------------------------------------------
+# Keyword strip
+# ---------------------------------------------------------------------------
+
+def _keyword_strip(keywords: list) -> str:
+    if not keywords:
+        return ""
+    pills = "".join(f'<span class="kw-pill">{kw}</span>' for kw in keywords)
+    return f'<div class="kw-strip"><span class="kw-label">Today:</span> {pills}</div>'
+
+
+# ---------------------------------------------------------------------------
+# NER card
+# ---------------------------------------------------------------------------
+
+def _ner_card(entities: dict) -> str:
+    people = entities.get("people", [])
+    places = entities.get("places", [])
+    orgs   = entities.get("orgs",   [])
+    if not people and not places and not orgs:
+        return ""
+
+    cols_html = []
+    for header, names in [("👤 People", people), ("📍 Places", places), ("🏢 Organizations", orgs)]:
+        if not names:
+            continue
+        items = "".join(f"<li>{n}</li>" for n in names)
+        cols_html.append(
+            f'<div class="ner-col">'
+            f'<h4>{header}</h4>'
+            f'<ul>{items}</ul>'
+            f'</div>'
+        )
+
+    return f'<div class="card ner-card">{"".join(cols_html)}</div>'
+
+
+# ---------------------------------------------------------------------------
 # Full page
 # ---------------------------------------------------------------------------
 
@@ -212,12 +300,18 @@ def to_html(
     major_stories: Optional[list[dict]] = None,
     top_n: int = 3,
     categories: Optional[dict[str, str]] = None,
+    forecast: Optional[list] = None,
+    keywords: Optional[list] = None,
+    entities: Optional[dict] = None,
 ) -> str:
     today = datetime.now().strftime("%A, %B %-d, %Y")
 
     major = _major_stories_section(major_stories or [])
     glance = _glance_section(sources, categories)
     grid = _flat_grid(sources, categories, top_n)
+    weather_html = _weather_widget(forecast or [])
+    kw_html = _keyword_strip(keywords or [])
+    ner_html = _ner_card(entities or {})
 
     return f"""<!DOCTYPE html>
 <html lang="en"><head>
@@ -308,6 +402,31 @@ def to_html(
   .snip {{ margin: 2px 0 0; color: #666; font-size: 0.82em; line-height: 1.4; }}
 
   .meta {{ color: #aaa; font-size: 0.78em; margin-top: 24px; text-align: center; }}
+
+  /* Weather */
+  .wx-bar {{ display:flex; gap:10px; margin-bottom:14px; }}
+  .wx-day {{ background:#fff; border:1px solid #ddd; border-radius:7px; padding:10px 14px; flex:1; text-align:center; }}
+  .wx-icon {{ font-size:1.8em; line-height:1; }}
+  .wx-label {{ font-size:0.7em; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; color:#555; margin-bottom:4px; }}
+  .wx-desc {{ font-size:0.75em; color:#666; margin:2px 0; }}
+  .wx-temp {{ font-size:0.85em; font-weight:600; color:#222; }}
+  .wx-rain {{ font-size:0.72em; color:#1a6b9a; margin-top:2px; }}
+
+  /* Keywords */
+  .kw-strip {{ margin-bottom:12px; display:flex; flex-wrap:wrap; align-items:center; gap:5px; }}
+  .kw-label {{ font-size:0.72em; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; color:#888; }}
+  .kw-pill {{ font-size:0.75em; background:#eee; color:#444; padding:2px 8px; border-radius:10px; }}
+
+  /* Story age */
+  .age {{ font-size:0.75em; color:#aaa; margin-left:4px; white-space:nowrap; }}
+
+  /* NER card */
+  .ner-card {{ display:flex; gap:0; padding:0; margin-top:14px; }}
+  .ner-col {{ flex:1; padding:14px; border-right:1px solid #eee; }}
+  .ner-col:last-child {{ border-right:none; }}
+  .ner-col h4 {{ margin:0 0 8px; font-size:0.72em; text-transform:uppercase; letter-spacing:0.06em; color:#555; }}
+  .ner-col ul {{ list-style:none; padding:0; margin:0; display:flex; flex-direction:column; gap:4px; }}
+  .ner-col li {{ font-size:0.83em; color:#333; }}
 </style>
 </head><body>
 
@@ -316,9 +435,12 @@ def to_html(
   <p class="date">{today}</p>
 </div>
 
+{weather_html}
+{kw_html}
 {glance}
 {major}
 {grid}
+{ner_html}
 
 <p class="meta">Generated by victoria-brief.</p>
 </body></html>"""
