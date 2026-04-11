@@ -42,13 +42,8 @@ sources:
     weight: 1.8
     category: "Indigenous"
 
-  - name: "First Nations: Songhees & Esquimalt"
-    search: "Songhees Nation OR Esquimalt Nation news announcement"
-    weight: 1.6
-    category: "Indigenous"
-
-  - name: "First Nations: WSANEC & BC"
-    search: "WSANEC OR Saanich Nation OR FNLC BC First Nations news announcement"
+  - name: "First Nations — Victoria & Island"
+    search: "Songhees OR Esquimalt OR WSANEC OR Lekwungen OR Nuu-chah-nulth Victoria BC OR Vancouver Island First Nations news"
     weight: 1.6
     category: "Indigenous"
 

@@ -47,21 +47,33 @@ def main() -> None:
 
     processed = sort_sources(processed, source_weights, top_n=3)
 
-    # Limit grid to 9 cards: up to 8 sources with ≥3 stories + 1 "Other News" catchall
-    # Pinned sources always get their own card regardless of item count
-    TOP_CARDS = 8
+    # Limit grid to 6 named cards + 1 "Other News" catchall.
+    # Two-pass: pinned sources are reserved first, then gravity-sorted
+    # sources fill remaining slots, so pinned cards always appear.
+    TOP_CARDS = 6
     MIN_ITEMS = 3
-    PINNED = {"Victoria Events", "Victoria Housing & Real Estate"}
+    PINNED = {
+        "Victoria Buzz",
+        "First Nations — Victoria & Island",
+        "Victoria Housing & Real Estate",
+    }
+
     top = {}
+    # Pass 1: reserve slots for pinned sources (only if they have items)
+    for name in PINNED:
+        if name in processed and processed[name]:
+            top[name] = processed[name]
+
+    # Pass 2: fill remaining slots in gravity order
     rest_items = []
     for name, items in processed.items():
-        if (name in PINNED or len(items) >= MIN_ITEMS) and len(top) < TOP_CARDS:
+        if name in top:
+            continue
+        if len(items) >= MIN_ITEMS and len(top) < TOP_CARDS:
             top[name] = items
         else:
             rest_items.extend(items)
-    if rest_items:
-        rest_items = score_items(deduplicate(rest_items))[:6]
-        top["Other News"] = rest_items
+
     processed = top
 
     major = find_major_stories(processed, min_sources=2, max_stories=5, similarity_threshold=0.25)
