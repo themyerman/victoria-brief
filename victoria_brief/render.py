@@ -42,6 +42,17 @@ _CATEGORY_ORDER = [
 def _major_stories_section(stories: list[dict]) -> str:
     if not stories:
         return ""
+
+    # Hero: first story with a thumbnail
+    hero_html = ""
+    for s in stories:
+        src = s.get("thumbnail", "")
+        link = s.get("link", "")
+        if src:
+            img = f'<img class="major-hero" src="{src}" alt="">'
+            hero_html = f'<a href="{link}" class="major-hero-wrap">{img}</a>' if link else img
+            break
+
     items_html = []
     for s in stories:
         title = s.get("title", "")
@@ -51,14 +62,11 @@ def _major_stories_section(stories: list[dict]) -> str:
         promoted = s.get("promoted", False)
         sources_str = " &middot; ".join(s.get("sources", []))
         anchor = f'<a href="{link}">{title}</a>' if link else title
-        thumbnail = s.get("thumbnail", "")
-        thumb_html = f'<img class="major-thumb" src="{thumbnail}" alt="">' if thumbnail else ""
         if promoted:
             badge = '<span class="badge badge-promoted">&#9889; Top Story</span>'
         else:
             badge = f'<span class="badge">{count} source{"s" if count != 1 else ""}</span>'
         items_html.append(f"""<li class="major-item">
-  {thumb_html}
   <div class="major-text">
     <strong>{anchor}</strong>
     {badge}
@@ -66,9 +74,15 @@ def _major_stories_section(stories: list[dict]) -> str:
     <p class="byline">{sources_str}</p>
   </div>
 </li>""")
+
     return f"""<section class="major-section">
-  <h2 class="major-h2">&#9733; Major Stories</h2>
-  <ul class="major-list">{"".join(items_html)}</ul>
+  <div class="major-inner">
+    <div class="major-stories-col">
+      <h2 class="major-h2">&#9733; Major Stories</h2>
+      <ul class="major-list">{"".join(items_html)}</ul>
+    </div>
+    {hero_html}
+  </div>
 </section>"""
 
 
@@ -367,11 +381,16 @@ def to_html(
   /* Major stories */
   .major-section {{ background: #fff; border: 2px solid #8b0000;
                     border-radius: 8px; padding: 16px 20px; margin-bottom: 20px; }}
+  .major-inner {{ display: flex; gap: 16px; align-items: stretch; }}
+  .major-stories-col {{ flex: 1; min-width: 0; }}
+  .major-hero-wrap {{ flex-shrink: 0; display: block; width: 260px; }}
+  .major-hero {{ width: 260px; height: 100%; max-height: 260px;
+                 object-fit: cover; border-radius: 6px; display: block; }}
+  @media (max-width: 650px) {{ .major-hero-wrap {{ display: none; }} }}
   .major-h2 {{ margin: 0 0 12px; font-size: 0.85em; text-transform: uppercase;
                letter-spacing: 0.06em; color: #8b0000; }}
-  .major-list {{ list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 12px; }}
-  .major-item {{ display: flex; gap: 12px; align-items: flex-start; }}
-  .major-thumb {{ width: 90px; height: 60px; object-fit: cover; border-radius: 4px; flex-shrink: 0; }}
+  .major-list {{ list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 10px; }}
+  .major-item {{ display: flex; gap: 10px; align-items: flex-start; }}
   .major-text {{ flex: 1; }}
   .major-text strong a {{ color: #222; text-decoration: none; font-size: 0.95em; }}
   .major-text strong a:hover {{ color: #8b0000; }}
