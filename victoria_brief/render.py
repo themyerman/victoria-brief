@@ -48,15 +48,20 @@ def _major_stories_section(stories: list[dict]) -> str:
         link = s.get("link", "")
         summary = (s.get("summary", "") or "")[:120].strip()
         count = s.get("source_count", 0)
+        promoted = s.get("promoted", False)
         sources_str = " &middot; ".join(s.get("sources", []))
         anchor = f'<a href="{link}">{title}</a>' if link else title
         thumbnail = s.get("thumbnail", "")
         thumb_html = f'<img class="major-thumb" src="{thumbnail}" alt="">' if thumbnail else ""
+        if promoted:
+            badge = '<span class="badge badge-promoted">&#9889; Top Story</span>'
+        else:
+            badge = f'<span class="badge">{count} source{"s" if count != 1 else ""}</span>'
         items_html.append(f"""<li class="major-item">
   {thumb_html}
   <div class="major-text">
     <strong>{anchor}</strong>
-    <span class="badge">{count} sources</span>
+    {badge}
     {"<p>" + summary + "</p>" if summary else ""}
     <p class="byline">{sources_str}</p>
   </div>
@@ -375,6 +380,7 @@ def to_html(
   .badge {{ display: inline-block; background: #8b0000; color: #fff;
             border-radius: 10px; font-size: 0.7em; padding: 1px 7px;
             margin-left: 6px; vertical-align: middle; }}
+  .badge-promoted {{ background: #7a5c00; }}
 
   /* Source grid */
   .grid {{ display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }}

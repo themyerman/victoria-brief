@@ -7,7 +7,7 @@ from pathlib import Path
 
 from .config import load_config
 from .sources import fetch_all
-from .nlp import deduplicate, score_items, find_major_stories, summarize_item, sort_sources, top_keywords, extract_entities
+from .nlp import deduplicate, score_items, find_major_stories, fill_major_stories, summarize_item, sort_sources, top_keywords, extract_entities
 from .render import to_html
 from . import mailer, thumbnails, weather
 
@@ -65,7 +65,8 @@ def main() -> None:
     processed = top
 
     major = find_major_stories(processed, min_sources=2, max_stories=5, similarity_threshold=0.25)
-    print(f"  {len(major)} major stories detected")
+    major = fill_major_stories(major, processed, fill_to=5)
+    print(f"  {len(major)} major stories ({sum(1 for s in major if not s.get('promoted'))} cross-source, {sum(1 for s in major if s.get('promoted'))} promoted)")
 
     print("Fetching thumbnails...")
     processed = thumbnails.enrich(processed, top_n=3)

@@ -232,6 +232,70 @@ def sort_sources(
     return {name: sources[name] for name in sorted_names}
 
 
+def _item_gravity(item: dict) -> float:
+    """Gravity score for a single article. Returns 1.0 if no signal found."""
+    text = (item.get("title", "") + " " + item.get("summary", "")).lower()
+    score = 1.0
+    for term, boost in _GRAVITY_TERMS.items():
+        if term in text:
+            score = max(score, boost)
+    return score
+
+
+def fill_major_stories(
+    major: list[dict],
+    sources: dict[str, list[dict]],
+    fill_to: int = 5,
+) -> list[dict]:
+    """
+    If cross-source major stories are fewer than fill_to, promote the
+    highest-gravity individual articles to fill the remaining slots.
+    Promoted stories are flagged with 'promoted': True so the renderer
+    can badge them differently (⚡ Top Story vs. "N sources").
+    Only articles with a gravity signal > 1.0 are eligible.
+    """
+    if len(major) >= fill_to:
+        return major
+
+    featured_links = {s.get("link") for s in major}
+
+    candidates = []
+    for source_name, items in sources.items():
+        for item in items:
+            link = item.get("link", "")
+            if link in featured_links or not link:
+                continue
+            gravity = _item_gravity(item)
+            if gravity <= 1.0:          # no signal — skip
+                continue
+            combined = gravity * item.get("_score", 0.5)
+            candidates.append((combined, item, source_name))
+
+    candidates.sort(key=lambda x: x[0], reverse=True)
+
+    filled = list(major)
+    seen = set(featured_links)
+    for combined, item, source_name in candidates:
+        if len(filled) >= fill_to:
+            break
+        link = item.get("link", "")
+        if link in seen:
+            continue
+        seen.add(link)
+        filled.append({
+            "title":        item.get("title", ""),
+            "link":         link,
+            "summary":      item.get("summary", ""),
+            "thumbnail":    item.get("thumbnail", ""),
+            "source_count": 0,
+            "sources":      [source_name],
+            "_score":       combined,
+            "promoted":     True,
+        })
+
+    return filled
+
+
 # ---------------------------------------------------------------------------
 # Within-source deduplication
 # ---------------------------------------------------------------------------
