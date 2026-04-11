@@ -771,11 +771,11 @@ def to_html(
   .ner-col li {{ font-size:0.83em; color:#333; }}
 
   /* Coastal strip */
-  .coastal-strip {{ display:flex; gap:14px; margin-bottom:16px; align-items:flex-start; }}
+  .coastal-strip {{ display:flex; gap:14px; margin-bottom:16px; align-items:stretch; }}
   .coastal-panel {{ background:#fff; border:1px solid #ddd; border-radius:7px;
                     padding:12px 16px; min-width:0; }}
   .ferries-panel {{ flex:1.4; }}
-  .coastal-right {{ flex:1; display:flex; flex-direction:column; gap:0; padding:0; overflow:hidden; }}
+  .coastal-right {{ flex:1; display:flex; flex-direction:column; gap:0; padding:0; overflow:visible; border-radius:7px; }}
   .coastal-h3 {{ margin:0 0 10px; font-size:0.72em; text-transform:uppercase;
                  letter-spacing:0.07em; color:#555; }}
   .coastal-src {{ margin:6px 0 0; font-size:0.65em; color:#bbb; }}
