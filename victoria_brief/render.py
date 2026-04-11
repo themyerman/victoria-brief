@@ -39,19 +39,27 @@ _CATEGORY_ORDER = [
 # Major stories (full-width)
 # ---------------------------------------------------------------------------
 
-def _major_stories_section(stories: list[dict]) -> str:
+def _major_stories_section(stories: list[dict], photo: Optional[dict] = None) -> str:
     if not stories:
         return ""
 
-    # Hero: first story with a thumbnail
+    # Hero: Flickr photo if available, otherwise first story thumbnail
     hero_html = ""
-    for s in stories:
-        src = s.get("thumbnail", "")
-        link = s.get("link", "")
-        if src:
-            img = f'<img class="major-hero" src="{src}" alt="">'
-            hero_html = f'<a href="{link}" class="major-hero-wrap">{img}</a>' if link else img
-            break
+    if photo and photo.get("url"):
+        img = f'<img class="major-hero" src="{photo["url"]}" alt="{photo.get("title", "")}">'
+        caption = ""
+        if photo.get("author"):
+            caption = f'<span class="major-hero-credit">📷 {photo["author"]}</span>'
+        inner = f'<a href="{photo["link"]}" class="major-hero-wrap" target="_blank">{img}</a>' if photo.get("link") else img
+        hero_html = f'<div class="major-hero-col">{inner}{caption}</div>'
+    else:
+        for s in stories:
+            src = s.get("thumbnail", "")
+            link = s.get("link", "")
+            if src:
+                img = f'<img class="major-hero" src="{src}" alt="">'
+                hero_html = f'<div class="major-hero-col"><a href="{link}" class="major-hero-wrap">{img}</a></div>' if link else f'<div class="major-hero-col">{img}</div>'
+                break
 
     items_html = []
     for s in stories:
@@ -84,6 +92,7 @@ def _major_stories_section(stories: list[dict]) -> str:
     {hero_html}
   </div>
 </section>"""
+
 
 
 # ---------------------------------------------------------------------------
@@ -322,10 +331,11 @@ def to_html(
     forecast: Optional[list] = None,
     keywords: Optional[list] = None,
     entities: Optional[dict] = None,
+    photo: Optional[dict] = None,
 ) -> str:
     today = datetime.now().strftime("%A, %B %-d, %Y")
 
-    major = _major_stories_section(major_stories or [])
+    major = _major_stories_section(major_stories or [], photo=photo)
     grid = _flat_grid(sources, categories, top_n)
     weather_html = _weather_widget(forecast or [])
     kw_html = _keyword_strip(keywords or [])
@@ -383,10 +393,11 @@ def to_html(
                     border-radius: 8px; padding: 16px 20px; margin-bottom: 20px; }}
   .major-inner {{ display: flex; gap: 16px; align-items: stretch; }}
   .major-stories-col {{ flex: 1; min-width: 0; }}
-  .major-hero-wrap {{ flex-shrink: 0; display: block; width: 260px; }}
-  .major-hero {{ width: 260px; height: 100%; max-height: 260px;
-                 object-fit: cover; border-radius: 6px; display: block; }}
-  @media (max-width: 650px) {{ .major-hero-wrap {{ display: none; }} }}
+  .major-hero-col {{ flex-shrink: 0; width: 260px; display: flex; flex-direction: column; gap: 4px; }}
+  .major-hero-wrap {{ display: block; }}
+  .major-hero {{ width: 260px; height: 240px; object-fit: cover; border-radius: 6px; display: block; }}
+  .major-hero-credit {{ font-size: 0.7em; color: #999; text-align: right; }}
+  @media (max-width: 650px) {{ .major-hero-col {{ display: none; }} }}
   .major-h2 {{ margin: 0 0 12px; font-size: 0.85em; text-transform: uppercase;
                letter-spacing: 0.06em; color: #8b0000; }}
   .major-list {{ list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 10px; }}

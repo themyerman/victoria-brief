@@ -9,7 +9,7 @@ from .config import load_config
 from .sources import fetch_all
 from .nlp import deduplicate, score_items, find_major_stories, fill_major_stories, summarize_item, sort_sources, top_keywords, extract_entities
 from .render import to_html
-from . import mailer, thumbnails, weather
+from . import mailer, thumbnails, weather, photos
 
 
 def main() -> None:
@@ -74,11 +74,14 @@ def main() -> None:
     print("Fetching weather...")
     forecast = weather.fetch_forecast()
 
+    print("Fetching photo of the day...")
+    photo = photos.fetch_photo()
+
     print("Extracting keywords and entities...")
     keywords = top_keywords(processed)
     entities = extract_entities(processed)
 
-    html = to_html(processed, major_stories=major, top_n=3, categories=categories, forecast=forecast, keywords=keywords, entities=entities)
+    html = to_html(processed, major_stories=major, top_n=3, categories=categories, forecast=forecast, keywords=keywords, entities=entities, photo=photo)
 
     if not html.strip():
         print("ERROR: render produced empty output.", file=sys.stderr)
