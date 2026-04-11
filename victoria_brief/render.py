@@ -53,7 +53,7 @@ def _photos_panel(photo_list: list) -> str:
         author = p.get("author", "")
         if not url:
             continue
-        img = f'<img class="pgrid-img" src="{url}" alt="{title}">'
+        img = f'<img class="pgrid-img" src="{url}" alt="{title}" onerror="this.closest(\'.pgrid-cell\').style.display=\'none\'">'
         wrapped = f'<a href="{link}" target="_blank">{img}</a>' if link else img
         credit = f'<span class="pgrid-credit">📷 {author}</span>' if author else ""
         cells.append(f'<div class="pgrid-cell">{wrapped}{credit}</div>')

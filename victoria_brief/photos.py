@@ -56,11 +56,22 @@ def _entry_to_dict(entry) -> dict:
     }
 
 
+def _url_reachable(url: str) -> bool:
+    """Quick HEAD check to confirm the image actually loads."""
+    try:
+        import requests
+        r = requests.head(url, timeout=4, allow_redirects=True)
+        return r.status_code == 200
+    except Exception:
+        return False
+
+
 def fetch_photos(n: int = 4) -> list[dict]:
     """
     Fetch n Victoria BC nature photos from Flickr, one from each of n
     different randomly-chosen feeds for maximum visual variety.
-    Returns a list of dicts with: url, title, author, link.
+    Validates each image URL before including it so broken/private photos
+    don't appear. Returns a list of dicts with: url, title, author, link.
     """
     try:
         import feedparser
@@ -79,16 +90,21 @@ def fetch_photos(n: int = 4) -> list[dict]:
             break
         try:
             parsed = feedparser.parse(feed_url)
+            # Shuffle candidates so we don't always pick the same photo per feed
             candidates = [
                 e for e in parsed.entries[:20]
                 if _image_url(e) and _image_url(e) not in seen_urls
             ]
-            if not candidates:
-                continue
-            entry = random.choice(candidates)
-            p = _entry_to_dict(entry)
-            seen_urls.add(p["url"])
-            photos.append(p)
+            random.shuffle(candidates)
+            for entry in candidates:
+                p = _entry_to_dict(entry)
+                if not p["url"] or p["url"] in seen_urls:
+                    continue
+                if not _url_reachable(p["url"]):
+                    continue
+                seen_urls.add(p["url"])
+                photos.append(p)
+                break
         except Exception as exc:
             print(f"  [warn] Flickr feed failed: {exc}", file=sys.stderr)
 
