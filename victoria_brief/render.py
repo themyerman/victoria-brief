@@ -288,7 +288,7 @@ def _weather_widget(forecast: list, sun: dict = None, aqhi: dict = None) -> str:
 def _coastal_right_panel(
     tides: list,
     whales: Optional[list] = None,
-    wildfire: Optional[list] = None,
+    wildfire: Optional[dict] = None,
     transit: Optional[list] = None,
     webcam_url: Optional[str] = None,
 ) -> str:
@@ -341,28 +341,45 @@ def _coastal_right_panel(
             f'</div>'
         )
 
-    if wildfire:
-        items = "".join(
-            f'<li><a href="{w.get("link","")}" target="_blank">{w.get("title","")}</a>'
-            f'<span class="crp-age">{_rel_time(w.get("published"))}</span></li>'
-            for w in wildfire[:3]
-        )
+    if wildfire is not None:
+        total = wildfire.get("total_active", 0)
+        fon   = wildfire.get("has_fire_of_note", False)
+        fires = wildfire.get("fires", [])
+        if total == 0:
+            fire_body = '<p class="crp-ok">✅ No active fire warnings nearby</p>'
+        else:
+            flag = "⚠️" if fon else "🔥"
+            count_html = (
+                f'<p class="crp-fire-count">{flag} '
+                f'<strong>{total}</strong> active fire{"s" if total != 1 else ""} nearby</p>'
+            )
+            rows = "".join(
+                f'<li>{f["icon"]} '
+                f'{"<strong>⭐ Fire of Note</strong> · " if f["fire_of_note"] else ""}'
+                f'<a href="{f["url"]}" target="_blank">{f["location"]}</a>'
+                f' <span class="crp-fire-meta">{f["status"]} · {f["size_ha"]}ha</span></li>'
+                for f in fires
+            )
+            fire_body = f'{count_html}<ul class="crp-list">{rows}</ul>'
         sections.append(
             f'<div class="crp-section">'
-            f'<h4 class="crp-h4">🔥 Wildfire Alerts</h4>'
-            f'<ul class="crp-list">{items}</ul>'
+            f'<h4 class="crp-h4">🔥 Wildfire — VI Region</h4>'
+            f'{fire_body}'
+            f'<p class="coastal-src">Source: BC Wildfire Service</p>'
             f'</div>'
         )
 
     if transit:
-        items = "".join(
-            f'<li>{a.get("text","")}</li>'
+        rows = "".join(
+            f'<li>{a.get("icon","ℹ️")} <strong>{a.get("header","")}</strong>'
+            f'<span class="crp-transit-desc"> — {a.get("description","")}</span></li>'
             for a in transit[:4]
         )
         sections.append(
             f'<div class="crp-section">'
             f'<h4 class="crp-h4">🚌 BC Transit Alerts</h4>'
-            f'<ul class="crp-list">{items}</ul>'
+            f'<ul class="crp-list">{rows}</ul>'
+            f'<p class="coastal-src">Source: BC Transit GTFS-RT</p>'
             f'</div>'
         )
 
@@ -434,7 +451,7 @@ def _coastal_strip(
     tides: list,
     ferry_routes: list,
     whales: Optional[list] = None,
-    wildfire: Optional[list] = None,
+    wildfire: Optional[dict] = None,
     transit: Optional[list] = None,
     webcam_url: Optional[str] = None,
 ) -> str:
@@ -579,7 +596,7 @@ def to_html(
     tides: Optional[list] = None,
     ferries: Optional[list] = None,
     whales: Optional[list] = None,
-    wildfire: Optional[list] = None,
+    wildfire: Optional[dict] = None,
     transit: Optional[list] = None,
     webcam_url: Optional[str] = None,
     entities: Optional[dict] = None,
@@ -743,6 +760,10 @@ def to_html(
   .crp-list a {{ color:#1a1a2e; text-decoration:none; }}
   .crp-list a:hover {{ color:#1a6b9a; text-decoration:underline; }}
   .crp-age {{ font-size:0.78em; color:#aaa; margin-left:4px; }}
+  .crp-ok {{ font-size:0.82em; color:#2d6a4f; margin:0; }}
+  .crp-fire-count {{ font-size:0.82em; margin:0 0 6px; color:#333; }}
+  .crp-fire-meta {{ font-size:0.78em; color:#888; margin-left:4px; }}
+  .crp-transit-desc {{ font-size:0.78em; color:#666; }}
   .crp-minigrid {{ display:grid; grid-template-columns:1fr 1fr; gap:0; }}
   .crp-mini {{ padding:10px 14px; border-top:1px solid #eee; }}
   .crp-mini:nth-child(even) {{ border-left:1px solid #eee; }}

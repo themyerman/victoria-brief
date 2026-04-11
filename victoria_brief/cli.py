@@ -9,7 +9,7 @@ from .config import load_config
 from .sources import fetch_all
 from .nlp import deduplicate, score_items, find_major_stories, fill_major_stories, summarize_item, sort_sources, extract_entities
 from .render import to_html
-from . import mailer, thumbnails, weather, photos, tides, ferries
+from . import mailer, thumbnails, weather, photos, tides, ferries, wildfire, transit, whale
 
 
 def main() -> None:
@@ -82,6 +82,15 @@ def main() -> None:
     print("Fetching ferry status...")
     ferry_routes = ferries.fetch_ferries()
 
+    print("Fetching wildfire status...")
+    wildfire_data = wildfire.fetch_wildfire()
+
+    print("Fetching BC Transit alerts...")
+    transit_alerts = transit.fetch_transit_alerts()
+
+    print("Fetching whale sightings...")
+    whale_sightings = whale.fetch_whale_sightings()
+
     print("Fetching photos...")
     photo_list = photos.fetch_photos(n=4)
 
@@ -98,6 +107,9 @@ def main() -> None:
         aqhi=aqhi,
         tides=tide_list,
         ferries=ferry_routes,
+        whales=whale_sightings,
+        wildfire=wildfire_data,
+        transit=transit_alerts,
         entities=entities,
         photos=photo_list,
     )
