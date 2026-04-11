@@ -307,7 +307,6 @@ def to_html(
     today = datetime.now().strftime("%A, %B %-d, %Y")
 
     major = _major_stories_section(major_stories or [])
-    glance = _glance_section(sources, categories)
     grid = _flat_grid(sources, categories, top_n)
     weather_html = _weather_widget(forecast or [])
     kw_html = _keyword_strip(keywords or [])
@@ -437,7 +436,6 @@ def to_html(
 
 {weather_html}
 {kw_html}
-{glance}
 {major}
 {grid}
 {ner_html}
