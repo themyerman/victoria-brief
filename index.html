@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Victoria Morning Brief — Friday, April 10, 2026</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    font-size: 14px;
+    max-width: 1100px;
+    margin: 32px auto;
+    padding: 0 20px;
+    color: #222;
+    line-height: 1.5;
+    background: #f4f4f4;
+  }
+
+  /* Header */
+  .masthead { background: #1a1a2e; color: #fff; padding: 16px 20px; border-radius: 8px; margin-bottom: 16px; }
+  .masthead h1 { margin: 0 0 2px; font-size: 1.4em; }
+  .masthead .date { color: #aaa; font-size: 0.85em; margin: 0; }
+
+  /* Today at a glance */
+  .glance-section { background: #fff; border: 1px solid #ddd; border-radius: 8px;
+                     padding: 14px 20px; margin-bottom: 16px; }
+  .glance-inner { display: flex; gap: 16px; align-items: stretch; }
+  .glance-bullets { flex: 1; min-width: 0; }
+  .glance-hero-wrap { flex-shrink: 0; display: block; width: 220px; }
+  .glance-hero { width: 220px; height: 100%; max-height: 220px; object-fit: cover;
+                  border-radius: 6px; display: block; }
+  @media (max-width: 600px) { .glance-hero-wrap { display: none; } }
+  .glance-h2 { margin: 0 0 10px; font-size: 0.75em; text-transform: uppercase;
+                letter-spacing: 0.08em; color: #555; }
+  .glance-cols { display: flex; gap: 24px; }
+  .glance-list { list-style: none; padding: 0; margin: 0; flex: 1;
+                  display: flex; flex-direction: column; gap: 5px; }
+  @media (max-width: 700px) { .glance-cols { flex-direction: column; } }
+  .glance-list li { font-size: 0.85em; display: flex; align-items: flex-start; gap: 8px; }
+  .glance-cat { flex-shrink: 0; width: 112px; text-align: center; font-size: 0.72em;
+                 font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;
+                 color: #fff; background: #1a1a2e; padding: 2px 6px;
+                 border-radius: 3px; opacity: 0.85; white-space: nowrap; line-height: 1.6; }
+  .glance-indent { flex-shrink: 0; width: 112px; }
+  .glance-list a { color: #1a1a2e; text-decoration: none; line-height: 1.35; }
+  .glance-list a:hover { color: #1a6b9a; text-decoration: underline; }
+
+  /* Major stories */
+  .major-section { background: #fff; border: 2px solid #8b0000;
+                    border-radius: 8px; padding: 16px 20px; margin-bottom: 20px; }
+  .major-inner { display: flex; gap: 16px; align-items: stretch; }
+  .major-stories-col { flex: 1; min-width: 0; }
+  /* Photos panel */
+  .photos-panel { flex-shrink: 0; width: 420px; display: flex; flex-direction: column; gap: 8px; }
+  .photos-h2 { margin: 0 0 6px; font-size: 0.75em; text-transform: uppercase;
+                letter-spacing: 0.08em; color: #1a1a2e; }
+  .pgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .pgrid-cell { position: relative; overflow: hidden; border-radius: 6px; }
+  .pgrid-img { width: 100%; height: 160px; object-fit: cover; display: block;
+                transition: transform 0.25s; }
+  .pgrid-cell:hover .pgrid-img { transform: scale(1.05); }
+  .pgrid-credit { display: block; font-size: 0.65em; color: #999;
+                   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+                   margin-top: 2px; }
+  @media (max-width: 700px) { .photos-panel { display: none; } }
+  .major-h2 { margin: 0 0 12px; font-size: 0.85em; text-transform: uppercase;
+               letter-spacing: 0.06em; color: #8b0000; }
+  .major-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 10px; }
+  .major-item { display: flex; gap: 10px; align-items: flex-start; }
+  .major-text { flex: 1; }
+  .major-text strong a { color: #222; text-decoration: none; font-size: 0.95em; }
+  .major-text strong a:hover { color: #8b0000; }
+  .major-text p { margin: 3px 0 0; font-size: 0.82em; color: #555; }
+  .major-text .byline { color: #999; font-size: 0.78em; }
+  .badge { display: inline-block; background: #8b0000; color: #fff;
+            border-radius: 10px; font-size: 0.7em; padding: 1px 7px;
+            margin-left: 6px; vertical-align: middle; }
+  .badge-promoted { background: #7a5c00; }
+
+  /* Source grid */
+  .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+  @media (max-width: 800px) { .grid { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 520px) { .grid { grid-template-columns: 1fr; } }
+
+  /* Cards */
+  .card { background: #fff; border: 1px solid #ddd; border-radius: 7px;
+           padding: 14px; display: flex; flex-direction: column; }
+  .card h3 { margin: 0 0 10px; font-size: 0.75em; text-transform: uppercase;
+              letter-spacing: 0.06em; color: #555; border-bottom: 1px solid #eee;
+              padding-bottom: 6px; display: flex; justify-content: space-between;
+              align-items: center; gap: 6px; }
+  .card-source { flex: 1; min-width: 0; }
+  .cat-badge { flex-shrink: 0; font-size: 0.85em; font-weight: 600; color: #fff;
+                background: #1a1a2e; padding: 1px 6px; border-radius: 3px;
+                letter-spacing: 0.04em; opacity: 0.75; }
+  .card ul { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 10px; }
+  .card li { font-size: 0.88em; }
+  .card li strong a { color: #1a1a2e; text-decoration: none; line-height: 1.35; }
+  .card li strong a:hover { color: #1a6b9a; }
+  .thumb { width: 100%; height: 70px; object-fit: cover; border-radius: 4px;
+            display: block; margin-bottom: 5px; }
+  .snip { margin: 2px 0 0; color: #666; font-size: 0.82em; line-height: 1.4; }
+
+  .meta { color: #aaa; font-size: 0.78em; margin-top: 24px; text-align: center; }
+
+  /* Weather */
+  .wx-bar { display:flex; gap:10px; margin-bottom:14px; }
+  .wx-day { background:#fff; border:1px solid #ddd; border-radius:7px; padding:10px 14px; flex:1; text-align:center; }
+  .wx-icon { font-size:1.8em; line-height:1; }
+  .wx-label { font-size:0.7em; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; color:#555; margin-bottom:4px; }
+  .wx-desc { font-size:0.75em; color:#666; margin:2px 0; }
+  .wx-temp { font-size:0.85em; font-weight:600; color:#222; }
+  .wx-rain { font-size:0.72em; color:#1a6b9a; margin-top:2px; }
+
+  /* Story age */
+  .age { font-size:0.75em; color:#aaa; margin-left:4px; white-space:nowrap; }
+
+  /* NER card */
+  .ner-card { display:flex; gap:0; padding:0; margin-top:14px; }
+  .ner-col { flex:1; padding:14px; border-right:1px solid #eee; }
+  .ner-col:last-child { border-right:none; }
+  .ner-col h4 { margin:0 0 8px; font-size:0.72em; text-transform:uppercase; letter-spacing:0.06em; color:#555; }
+  .ner-col ul { list-style:none; padding:0; margin:0; display:flex; flex-direction:column; gap:4px; }
+  .ner-col li { font-size:0.83em; color:#333; }
+
+  /* Coastal strip */
+  .coastal-strip { display:flex; gap:14px; margin-bottom:16px; align-items:flex-start; }
+  .coastal-panel { background:#fff; border:1px solid #ddd; border-radius:7px;
+                    padding:12px 16px; min-width:0; }
+  .ferries-panel { flex:1.4; }
+  .coastal-right { flex:1; display:flex; flex-direction:column; gap:0; padding:0; overflow:hidden; }
+  .coastal-h3 { margin:0 0 10px; font-size:0.72em; text-transform:uppercase;
+                 letter-spacing:0.07em; color:#555; }
+  .coastal-src { margin:6px 0 0; font-size:0.65em; color:#bbb; }
+
+  /* Coastal right panel sections */
+  .crp-section { padding:12px 16px; border-bottom:1px solid #eee; }
+  .crp-section:last-child { border-bottom:none; }
+  .crp-h4 { margin:0 0 8px; font-size:0.72em; text-transform:uppercase;
+             letter-spacing:0.07em; color:#555; }
+  .crp-list { list-style:none; padding:0; margin:0; display:flex; flex-direction:column; gap:5px; }
+  .crp-list li { font-size:0.82em; color:#333; }
+  .crp-list a { color:#1a1a2e; text-decoration:none; }
+  .crp-list a:hover { color:#1a6b9a; text-decoration:underline; }
+  .crp-age { font-size:0.78em; color:#aaa; margin-left:4px; }
+  .crp-ok { font-size:0.82em; color:#2d6a4f; margin:0; }
+  .crp-fire-count { font-size:0.82em; margin:0 0 6px; color:#333; }
+  .crp-fire-meta { font-size:0.78em; color:#888; margin-left:4px; }
+  .crp-transit-desc { font-size:0.78em; color:#666; }
+  .crp-minigrid { display:grid; grid-template-columns:1fr 1fr; gap:0; }
+  .crp-mini { padding:10px 14px; border-top:1px solid #eee; }
+  .crp-mini:nth-child(even) { border-left:1px solid #eee; }
+  .crp-h5 { margin:0 0 6px; font-size:0.7em; text-transform:uppercase;
+             letter-spacing:0.06em; color:#555; }
+  .webcam-img { width:100%; border-radius:4px; display:block; object-fit:cover; max-height:90px; }
+
+  /* Tides */
+  .tides-row { display:flex; gap:8px; flex-wrap:wrap; }
+  .tide-event { display:flex; flex-direction:column; align-items:center; gap:3px;
+                 background:#f7f9fc; border-radius:6px; padding:8px 12px; min-width:86px; }
+  .tide-event.tide-past { opacity:0.4; }
+  .tide-type { font-size:0.7em; font-weight:700; text-transform:uppercase;
+                letter-spacing:0.05em; padding:2px 6px; border-radius:3px; }
+  .tide-high { background:#1a6b9a; color:#fff; }
+  .tide-low  { background:#5a8a6a; color:#fff; }
+  .tide-time { font-size:0.85em; font-weight:600; color:#222; }
+  .tide-ht   { font-size:0.73em; color:#777; }
+
+  /* Ferries */
+  .ferry-route { margin-bottom:10px; }
+  .ferry-route:last-child { margin-bottom:0; }
+  .ferry-route-hdr { font-size:0.8em; font-weight:700; color:#333; margin-bottom:6px; }
+  .ferry-dur { font-weight:400; color:#888; margin-left:6px; }
+  .sailing { display:flex; align-items:center; gap:8px; font-size:0.82em;
+              padding:5px 0; border-bottom:1px solid #f0f0f0; flex-wrap:wrap; }
+  .sailing:last-child { border-bottom:none; }
+  .sailing-current { background:#fffbe6; border-radius:4px; padding:5px 8px;
+                      border-bottom:none; margin-bottom:4px; }
+  .sail-now { font-size:0.7em; font-weight:700; text-transform:uppercase;
+               background:#e6a817; color:#fff; border-radius:3px; padding:1px 5px; }
+  .sail-time { font-weight:600; color:#1a1a2e; white-space:nowrap; }
+  .sail-arr  { color:#888; white-space:nowrap; }
+  .sail-vessel { flex:1; color:#555; font-size:0.9em; white-space:nowrap;
+                  overflow:hidden; text-overflow:ellipsis; }
+  .sail-fill { font-size:0.78em; font-weight:700; padding:2px 7px;
+                border-radius:10px; white-space:nowrap; }
+  .fill-low  { background:#d4edda; color:#155724; }
+  .fill-mid  { background:#fff3cd; color:#856404; }
+  .fill-high { background:#f8d7da; color:#721c24; }
+  .vessel-alert { font-size:0.78em; color:#c0392b; }
+
+  /* Events section */
+  .events-section { background:#fff; border:1px solid #ddd; border-radius:7px;
+                     padding:14px 20px; margin-top:16px; }
+  .events-h2 { margin:0 0 12px; font-size:0.85em; text-transform:uppercase;
+                letter-spacing:0.06em; color:#2d6a4f; border-bottom:1px solid #eee;
+                padding-bottom:8px; }
+  .events-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:14px; }
+  .event-card { font-size:0.85em; display:flex; flex-direction:column; gap:5px; }
+  .event-card .thumb { height:90px; border-radius:5px; }
+  .event-card strong a { color:#1a1a2e; text-decoration:none; line-height:1.35; display:block; }
+  .event-card strong a:hover { color:#2d6a4f; text-decoration:underline; }
+  @media (max-width:900px) { .events-grid { grid-template-columns:repeat(2,1fr); } }
+  @media (max-width:520px) { .events-grid { grid-template-columns:1fr; } }
+
+  @media (max-width:700px) { .coastal-strip { flex-direction:column; } }
+</style>
+</head><body>
+
+<div class="masthead">
+  <h1>Victoria Morning Brief</h1>
+  <p class="date">Friday, April 10, 2026</p>
+</div>
+
+<div class="wx-bar"><div class="wx-day"><div class="wx-label">Today</div><div class="wx-icon">☁️</div><div class="wx-desc">Overcast</div><div class="wx-temp">17.1°C / 3.8°C &nbsp; 62.8°F / 38.8°F</div></div><div class="wx-day"><div class="wx-label">Tomorrow</div><div class="wx-icon">🌧</div><div class="wx-desc">Light rain</div><div class="wx-temp">10.5°C / 7.4°C &nbsp; 50.9°F / 45.3°F</div><div class="wx-rain">&#x1F4A7; 75%</div></div><div class="wx-day"><div class="wx-label">Sunday</div><div class="wx-icon">🌦</div><div class="wx-desc">Light drizzle</div><div class="wx-temp">14.3°C / 5.9°C &nbsp; 57.7°F / 42.6°F</div><div class="wx-rain">&#x1F4A7; 17%</div></div><div class="wx-day"><div class="wx-label">Sun &amp; Air</div><div class="wx-icon">🌅</div><div class="wx-desc">&#x2600;&#xFE0F; 6:30 AM &nbsp; 🌇 7:58 PM</div><div class="wx-desc">13h of daylight</div><div class="wx-desc" style="margin-top:4px">Air: 🟡 3.3 <em>Moderate</em></div></div></div>
+<section class="major-section">
+  <div class="major-inner">
+    <div class="major-stories-col">
+      <h2 class="major-h2">&#9733; Major Stories</h2>
+      <ul class="major-list"><li class="major-item">
+  <div class="major-text">
+    <strong><a href="https://cheknews.ca/songhees-says-esquimalt-nations-civil-claim-for-hatley-park-does-not-alter-long-negotiated-treaty-1318024/">Songhees says Esquimalt Nation’s civil claim for Hatley Park ‘does not alter’ long negotiated treaty</a></strong>
+    <span class="badge">2 sources</span>
+    <p>Songhees Nation says the recent civil claim filed by Esquimalt Nation over Hatley Park should not delay its ongoing trea</p>
+    <p class="byline">CHEK News &middot; First Nations — Victoria & Island</p>
+  </div>
+</li><li class="major-item">
+  <div class="major-text">
+    <strong><a href="https://www.cbc.ca/news/canada/british-columbia/dripa-suspension-confidence-vote-first-nation-leaders-opposed-9.7158996?cmp=rss">First Nations leaders strongly oppose B.C. plan to pause DRIPA as Eby defends move ahead of confidence vote</a></strong>
+    <span class="badge">2 sources</span>
+    <p>NDP MLAs to reject Premier David Eby’s plan to suspend some sections of the province’s Declaration on the Rights of Indi</p>
+    <p class="byline">CBC British Columbia &middot; CHEK News</p>
+  </div>
+</li><li class="major-item">
+  <div class="major-text">
+    <strong><a href="https://globalnews.ca/news/11774311/bc-loses-more-jobs-march-unemployment-highest-in-decade/">B.C. loses more jobs in March, unemployment rate highest in a decade</a></strong>
+    <span class="badge">2 sources</span>
+    <p>The unemployment rate in British Columbia is now 6.7 per cent, which is the highest in a decade, except for the height o</p>
+    <p class="byline">CBC British Columbia &middot; Global News BC</p>
+  </div>
+</li><li class="major-item">
+  <div class="major-text">
+    <strong><a href="https://globalnews.ca/news/11773861/crystal-pool-victoria-chemical-incident-hospital/">8 people taken to hospital after ‘chemical incident’ at Victoria pool</a></strong>
+    <span class="badge">2 sources</span>
+    <p>A City of Victoria spokesperson told Global News that the pool on Quadra Street and the nearby park were evacuated as a</p>
+    <p class="byline">Global News BC &middot; Victoria Buzz</p>
+  </div>
+</li><li class="major-item">
+  <div class="major-text">
+    <strong><a href="https://victoriabuzz.com/2026/04/prohibited-driver-in-uninsured-bmw-crashes-into-rock-face-flips-on-millstream-road/">Prohibited driver in uninsured BMW crashes into rock face flips on Millstream Road</a></strong>
+    <span class="badge">2 sources</span>
+    <p>He was seriously injured in the crash.</p>
+    <p class="byline">CHEK News &middot; Victoria Buzz</p>
+  </div>
+</li></ul>
+    </div>
+    <div class="photos-panel">
+  <h2 class="photos-h2">&#127758; Victoria</h2>
+  <div class="pgrid"><div class="pgrid-cell"><a href="https://www.flickr.com/photos/om44pomch9/55013150326/" target="_blank"><img class="pgrid-img" src="https://live.staticflickr.com/65535/55013150326_b1a8a70c6c_b.jpg" alt="A Walk Amongst The Lights"></a><span class="pgrid-credit">📷 Per@vicbcca</span></div><div class="pgrid-cell"><a href="https://www.flickr.com/photos/joetourist/54317030646/" target="_blank"><img class="pgrid-img" src="https://live.staticflickr.com/65535/54317030646_a3156029be_b.jpg" alt="Looking south down Finlayson Arm with Juan de Fuca Strait in the distance"></a><span class="pgrid-credit">📷 joe_tourist</span></div><div class="pgrid-cell"><a href="https://www.flickr.com/photos/56705607@N00/55119114412/" target="_blank"><img class="pgrid-img" src="https://www.flickr.com/apps/video/stewart.swf?v=2968162862&photo_id=55119114412" alt="2025 11 19 Cuthbert Holmes Park Walk 36"></a><span class="pgrid-credit">📷 Blake Handley</span></div><div class="pgrid-cell"><a href="https://www.flickr.com/photos/56705607@N00/55186690964/" target="_blank"><img class="pgrid-img" src="https://live.staticflickr.com/65535/55186690964_016e364d51_b.jpg" alt="2026 03 05d Breakwater 7"></a><span class="pgrid-credit">📷 Blake Handley</span></div></div>
+</div>
+  </div>
+</section>
+<div class="coastal-strip"><div class="coastal-panel ferries-panel"><h3 class="coastal-h3">⛴ BC Ferries</h3><div class="ferry-route">  <div class="ferry-route-hdr">Swartz Bay → Tsawwassen    <span class="ferry-dur">1h 35m</span></div>  <div class="sailing sailing-current">  <span class="sail-now">Now</span>  <span class="sail-time">7:12 am</span>  <span class="sail-arr">→ 8:47 am</span>  <span class="sail-vessel">Spirit of Vancouver Island</span>  <span class="sail-fill fill-low">Empty</span>  </div><div class="sailing sailing-current">  <span class="sail-now">Now</span>  <span class="sail-time">8:02 am</span>  <span class="sail-arr">→ 9:37 am</span>  <span class="sail-vessel">Coastal Renaissance</span>  <span class="sail-fill fill-low">Empty</span>  </div><div class="sailing sailing-current">  <span class="sail-now">Now</span>  <span class="sail-time">8:59 am</span>  <span class="sail-arr">→ 10:34 am</span>  <span class="sail-vessel">Spirit of British Columbia</span>  <span class="sail-fill fill-low">Empty</span>  </div><div class="sailing sailing-current">  <span class="sail-now">Now</span>  <span class="sail-time">11:19 am</span>  <span class="sail-arr">→ 12:54 pm</span>  <span class="sail-vessel">Spirit of Vancouver Island</span>  <span class="sail-fill fill-low">Empty</span>  </div></div><div class="ferry-route">  <div class="ferry-route-hdr">Tsawwassen → Swartz Bay    <span class="ferry-dur">1h 35m</span></div>  <div class="sailing sailing-current">  <span class="sail-now">Now</span>  <span class="sail-time">6:06 pm</span>  <span class="sail-arr">→ 7:41 pm</span>  <span class="sail-vessel">Coastal Renaissance</span>  <span class="sail-fill fill-low">Empty</span>  </div><div class="sailing">    <span class="sail-time">7:00 pm</span>  <span class="sail-arr">→ </span>  <span class="sail-vessel">Spirit of British Columbia</span>  <span class="sail-fill fill-high">100%</span>  </div><div class="sailing">    <span class="sail-time">9:00 pm</span>  <span class="sail-arr">→ </span>  <span class="sail-vessel">Spirit of Vancouver Island</span>  <span class="sail-fill fill-high">100%</span>  </div><div class="sailing">    <span class="sail-time">10:00 pm</span>  <span class="sail-arr">→ </span>  <span class="sail-vessel">Coastal Renaissance</span>  <span class="sail-fill fill-high">81%</span>  </div></div><p class="coastal-src">Source: bcferriesapi.ca</p></div><div class="coastal-panel coastal-right"><div class="crp-section"><h4 class="crp-h4">🌊 Tides — Victoria Harbour</h4><div class="tides-row"><div class="tide-event"><span class="tide-type tide-high">🌊 High</span><span class="tide-time">2:54 AM</span><span class="tide-ht">2.5m / 8.2ft</span></div><div class="tide-event"><span class="tide-type tide-low">〰️ Low</span><span class="tide-time">5:31 PM</span><span class="tide-ht">0.95m / 3.1ft</span></div></div><p class="coastal-src">Source: Canadian Hydrographic Service</p></div><div class="crp-section"><h4 class="crp-h4">🔥 Wildfire — VI Region</h4><p class="crp-fire-count">🔥 <strong>2</strong> active fires nearby</p><ul class="crp-list"><li>🟡 <a href="https://wildfiresituation.nrs.gov.bc.ca/incidents?fireYear=2026&incidentNumber=V30029" target="_blank">Rancheree Street</a> <span class="crp-fire-meta">Under Control · 61.8ha</span></li><li>🟡 <a href="https://wildfiresituation.nrs.gov.bc.ca/incidents?fireYear=2026&incidentNumber=V30006" target="_blank">Devine</a> <span class="crp-fire-meta">Under Control · 0.1ha</span></li></ul><p class="coastal-src">Source: BC Wildfire Service</p></div><div class="crp-section"><h4 class="crp-h4">🚌 BC Transit Alerts</h4><ul class="crp-list"><li>ℹ️ <strong>Stop Closure</strong><span class="crp-transit-desc"> — Stop ID 100743 on southbound Burnside at Interurban is closed until further notice.</span></li><li>ℹ️ <strong>Detour</strong><span class="crp-transit-desc"> — Due to construction the route 2 and 5 will be on the following detour until further notice.</span></li><li>ℹ️ <strong>Detour</strong><span class="crp-transit-desc"> — Due to planned upgrades to the Point Ellice (Bay Street) Bridge, the route 10 will be on the following detour 24/7 start…</span></li><li>ℹ️ <strong>Detour</strong><span class="crp-transit-desc"> — Due to a sink hole on Dufour Rd, the route 63 will be on the following detour until further notice.</span></li></ul><p class="coastal-src">Source: BC Transit GTFS-RT</p></div></div></div>
+<div class="grid"><div class="card">
+  <h3><span class="card-source">CBC British Columbia</span><span class="cat-badge">BC News</span></h3>
+  <ul><li>
+  <img class="thumb" src="https://i.cbc.ca/ais/a86d9e36-9283-41a4-84ce-b5492569db82,1762282902997/full/max/0/default.jpg?im=Crop%2Crect%3D%280%2C0%2C1920%2C1080%29%3BResize%3D620" alt="">
+  <strong><a href="https://www.cbc.ca/news/canada/british-columbia/dripa-suspension-confidence-vote-first-nation-leaders-opposed-9.7158996?cmp=rss">First Nations leaders strongly oppose B.C. plan to pause DRIPA as Eby defends move ahead of confidence vote</a><span class="age">4h</span></strong>
+  <p class='snip'>NDP MLAs to reject Premier David Eby’s plan to suspend some sections of the province’s Declaration on the Righ</p>
+</li><li>
+  <img class="thumb" src="https://i.cbc.ca/ais/05e7601d-64bd-4faf-8d12-cbdd56f9267b,1775870531274/full/max/0/default.jpg?im=Crop%2Crect%3D%280%2C258%2C6500%2C3656%29%3BResize%3D620" alt="">
+  <strong><a href="https://www.cbc.ca/news/canada/british-columbia/memorial-mass-lapu-lapu-day-tragedy-9.7160262?cmp=rss">Memorial mass held for victims of Vancouver's Lapu-Lapu Day tragedy</a><span class="age">9m</span></strong>
+  <p class='snip'>Survivors and relatives of victims were joined by British Columbia Premier David Eby, federal Conservative Lea</p>
+</li><li>
+  <img class="thumb" src="https://i.cbc.ca/ais/867c827d-a555-4335-bef5-addb5249a188,1775863374679/full/max/0/default.jpg?im=Crop%2Crect%3D%280%2C756%2C4032%2C2268%29%3BResize%3D620" alt="">
+  <strong><a href="https://www.cbc.ca/news/canada/british-columbia/highway-of-tears-pillar-of-hope-9.7160092?cmp=rss">'It means so much': Highway of Tears' family members unveil Pillar of Hope in Prince George</a><span class="age">1h</span></strong>
+  <p class='snip'>Family members of Indigenous women and girls who have gone missing or been murdered along the Highway of Tears</p>
+</li></ul>
+</div><div class="card">
+  <h3><span class="card-source">Global News BC</span><span class="cat-badge">BC News</span></h3>
+  <ul><li>
+  <img class="thumb" src="https://globalnews.ca/wp-content/uploads/2025/11/f97bcd9972ba158e6379b85d177b58118323822f09aefadd32b31c2174badcbd.jpg?quality=65&strip=all&w=720&h=379&crop=1" alt="">
+  <strong><a href="https://globalnews.ca/news/11774311/bc-loses-more-jobs-march-unemployment-highest-in-decade/">B.C. loses more jobs in March, unemployment rate highest in a decade</a><span class="age">4m</span></strong>
+  <p class='snip'>The unemployment rate in British Columbia is now 6.7 per cent, which is the highest in a decade, except for th</p>
+</li><li>
+  <img class="thumb" src="https://globalnews.ca/wp-content/uploads/2026/04/First-Nations-BC.jpg?quality=65&strip=all&w=720&h=379&crop=1" alt="">
+  <strong><a href="https://globalnews.ca/news/11773834/first-nations-leaders-bc-uphold-dripa/">First Nations leaders urge B.C. to uphold DRIPA: ‘We will not back down’</a><span class="age">5h</span></strong>
+  <p class='snip'>'This is an historical moment for First Nations and we will not back down,' Robert Phillips, First Nations Sum</p>
+</li><li>
+  <img class="thumb" src="https://globalnews.ca/wp-content/uploads/2026/04/crystal-pool-victoria.jpg?quality=65&strip=all&w=720&h=379&crop=1" alt="">
+  <strong><a href="https://globalnews.ca/news/11773861/crystal-pool-victoria-chemical-incident-hospital/">8 people taken to hospital after ‘chemical incident’ at Victoria pool</a><span class="age">5h</span></strong>
+  <p class='snip'>A City of Victoria spokesperson told Global News that the pool on Quadra Street and the nearby park were evacu</p>
+</li></ul>
+</div><div class="card">
+  <h3><span class="card-source">Victoria Buzz</span><span class="cat-badge">Victoria & Island</span></h3>
+  <ul><li>
+  <img class="thumb" src="https://victoriabuzz.com/wp-content/uploads/2026/04/east-sooke-eats-e1775855798994.jpg" alt="">
+  <strong><a href="https://victoriabuzz.com/2026/04/8-food-trucks-you-will-want-to-check-out-on-vancouver-island/">8 food trucks you will want to check out on Vancouver Island</a><span class="age">5h</span></strong>
+  <p class='snip'>From Victoria to Tofino! 🍽️</p>
+</li><li>
+  <img class="thumb" src="https://victoriabuzz.com/wp-content/uploads/2025/05/sidney-museum.png" alt="">
+  <strong><a href="https://victoriabuzz.com/2026/04/this-new-sidney-museum-exhibit-celebrates-history-of-chinese-immigration-in-bc/">This new Sidney Museum exhibit celebrates history of Chinese immigration in BC</a><span class="age">2h</span></strong>
+  <p class='snip'>Sharing many untold stories.</p>
+</li><li>
+  <img class="thumb" src="https://victoriabuzz.com/wp-content/uploads/2016/01/DSC_3648-Edit.jpg" alt="">
+  <strong><a href="https://victoriabuzz.com/2026/04/cheese-products-sold-across-vancouver-island-recalled-over-listeria-concerns/">Cheese products sold across Vancouver Island recalled over Listeria concerns</a><span class="age">8h</span></strong>
+  <p class='snip'>Including Thrifty Foods and Sobeys.</p>
+</li></ul>
+</div><div class="card">
+  <h3><span class="card-source">CHEK News</span><span class="cat-badge">Victoria & Island</span></h3>
+  <ul><li>
+  <img class="thumb" src="https://cheknews.ca/wp-content/uploads/2022/10/Royal-Roads-University-Colwood-00006-scaled.jpg" alt="">
+  <strong><a href="https://cheknews.ca/songhees-says-esquimalt-nations-civil-claim-for-hatley-park-does-not-alter-long-negotiated-treaty-1318024/">Songhees says Esquimalt Nation’s civil claim for Hatley Park ‘does not alter’ long negotiated treaty</a><span class="age">2h</span></strong>
+  <p class='snip'>Songhees Nation says the recent civil claim filed by Esquimalt Nation over Hatley Park should not delay its on</p>
+</li><li>
+  <img class="thumb" src="https://cheknews.ca/wp-content/uploads/2026/04/Copy-of-Blank-background-for-pictures-6-2.jpg" alt="">
+  <strong><a href="https://cheknews.ca/new-arrivals-record-cruise-ship-season-kicks-off-in-victoria-1318035/">New arrivals: Record cruise ship season kicks off in Victoria</a><span class="age">38m</span></strong>
+  <p class='snip'>The red carpet doesn’t come out for just anything, and when the Lekwungen dancers perform at Ogden Point, it’s</p>
+</li><li>
+  <img class="thumb" src="https://cheknews.ca/wp-content/uploads/2024/04/4ef6db02ef6ceea5f9783c7f5a8e453664c660c5a7af31be5fc08bb189dd380f.jpg" alt="">
+  <strong><a href="https://cheknews.ca/cowichan-valley-regional-district-amends-civil-claim-against-deep-water-recovery-1317991/">Comox Valley Regional District amends civil claim against Deep Water Recovery</a><span class="age">2h</span></strong>
+  <p class='snip'>In a continued effort to halt a company’s shipbreaking operations in the region, the Comox Valley Regional Dis</p>
+</li></ul>
+</div><div class="card">
+  <h3><span class="card-source">First Nations — Victoria & Island</span><span class="cat-badge">Indigenous</span></h3>
+  <ul><li>
+  
+  <strong><a href="https://www.pressreader.com/canada/the-province/20260408/281535117549522">Esquimalt Nation suing federal AG for historic Hatley Park in</a></strong>
+  <p class='snip'>3 days ago · The Esquimalt Nation, which has a small reserve on the south of Vancouver Island , is suing Canad</p>
+</li><li>
+  <img class="thumb" src="https://smartcdn.gprod.postmedia.digital/vancouversun/wp-content/uploads/2026/04/0407-hatley-w.jpeg" alt="">
+  <strong><a href="https://vancouversun.com/news/local-news/esquimalt-nation-sues-canada-for-hatley-park-in-victoria-claims-it-is-excluded-from-new-treaty">Esquimalt Nation sues Canada for Hatley Park in Victoria</a></strong>
+  <p class='snip'>3 days ago · The Esquimalt Nation's 384 members are suing Canada's attorney general for treaty rights for Hatl</p>
+</li><li>
+  <img class="thumb" src="https://img1.wsimg.com/isteam/ip/d53ed1eb-1ced-41a5-a0c5-780727ea1a45/iStock-1364101918.jpg" alt="">
+  <strong><a href="https://lekwungencharitablesociety.ca/ləḱʷəŋən-history">Ləḱʷəŋən History - Lekwungen Charitable Society</a></strong>
+  <p class='snip'>History of the ləḱʷəŋən Peoples čəléŋən ʔə tsə lək̕ʷə́ŋən ʔəlxʷílŋəxʷ The Lekwungen Nations —known today as th</p>
+</li></ul>
+</div><div class="card">
+  <h3><span class="card-source">BC Arts Council</span><span class="cat-badge">Arts & Culture</span></h3>
+  <ul><li>
+  
+  <strong><a href="https://www.bcartscouncil.ca/funding/">Funding</a></strong>
+  <p class='snip'>The BC Arts Council supports the artistic development of Indigenous artists and organizations across British C</p>
+</li><li>
+  <img class="thumb" src="https://images.ctfassets.net/modxx330knqj/7cWWGgbYzPx2RHBzJzB7Qd/bf1cc5315254f269c5fb212da7dc0150/logo_-_dark_-_vertical.png" alt="">
+  <strong><a href="https://hellodarwin.com/business-aid/organizations/bc-arts-council">British Columbia Arts Council (BCAC) Funding Programs</a></strong>
+  <p class='snip'>Explore all the government grants offered by The British Columbia Arts Council is a provincial agency dedicate</p>
+</li><li>
+  
+  <strong><a href="https://artsbc.org/grant-funding/">Grant & Funding - Arts BC</a></strong>
+  <p class='snip'>Click on the individual links to visit their website and learn more about the dedicated funding programs they</p>
+</li></ul>
+</div></div>
+
+
+
+<p class="meta">Generated by victoria-brief.</p>
+</body></html>
