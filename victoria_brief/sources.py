@@ -142,7 +142,7 @@ def fetch_all(sources: list[dict]) -> dict[str, list[dict]]:
     for source in sources:
         name = source["name"]
         if "url" in source:
-            items = fetch_rss(source["url"])
+            items = fetch_rss(source["url"], hours=source.get("hours", 26))
         elif "search" in source:
             items = fetch_search(source["search"])
         else:

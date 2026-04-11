@@ -506,7 +506,7 @@ def _ner_card(entities: dict) -> str:
 def _events_section(
     sources: dict[str, list[dict]],
     categories: Optional[dict[str, str]],
-    top_n: int = 8,
+    top_n: int = 12,
 ) -> str:
     """Pull all Events-category sources into a dedicated bottom section."""
     items = []
@@ -531,7 +531,7 @@ def _events_section(
     for item in unique[:top_n]:
         title     = item.get("title", "")
         link      = item.get("link", "")
-        summary   = (item.get("summary", "") or "")[:120].strip()
+        summary   = (item.get("summary", "") or "")[:160].strip()
         thumbnail = item.get("thumbnail", "")
         age       = _rel_time(item.get("published"))
         anchor    = f'<a href="{link}" target="_blank">{title}</a>' if link else title
@@ -812,8 +812,9 @@ def to_html(
   .events-h2 {{ margin:0 0 12px; font-size:0.85em; text-transform:uppercase;
                 letter-spacing:0.06em; color:#2d6a4f; border-bottom:1px solid #eee;
                 padding-bottom:8px; }}
-  .events-grid {{ display:grid; grid-template-columns:repeat(4,1fr); gap:12px; }}
-  .event-card {{ font-size:0.85em; display:flex; flex-direction:column; gap:4px; }}
+  .events-grid {{ display:grid; grid-template-columns:repeat(4,1fr); gap:14px; }}
+  .event-card {{ font-size:0.85em; display:flex; flex-direction:column; gap:5px; }}
+  .event-card .thumb {{ height:90px; border-radius:5px; }}
   .event-card strong a {{ color:#1a1a2e; text-decoration:none; line-height:1.35; display:block; }}
   .event-card strong a:hover {{ color:#2d6a4f; text-decoration:underline; }}
   @media (max-width:900px) {{ .events-grid {{ grid-template-columns:repeat(2,1fr); }} }}

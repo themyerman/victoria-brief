@@ -95,9 +95,22 @@ sources:
     weight: 1.0
     category: "Arts & Culture"
 
-  - name: "Victoria Events"
-    search: "Victoria BC cultural event this week"
-    weight: 0.9
+  # Events: RSS feeds for real local event listings (7-day lookback — events post in advance)
+  - name: "Victoria Buzz Events"
+    url: "https://victoriabuzz.com/category/events/feed/"
+    hours: 168
+    weight: 1.1
+    category: "Events"
+
+  - name: "Times Colonist Entertainment"
+    url: "https://www.timescolonist.com/rss/entertainment"
+    hours: 168
+    weight: 1.2
+    category: "Events"
+
+  - name: "Victoria Indigenous & Cultural Events"
+    search: "Victoria BC Vancouver Island powwow First Nations festival Indigenous cultural event 2026"
+    weight: 1.0
     category: "Events"
 
   # --- University & Research ---
@@ -105,11 +118,6 @@ sources:
     url: "https://www.uvic.ca/news/rss/"
     weight: 1.1
     category: "Education"
-
-  - name: "Camosun & UVic Events"
-    search: "Camosun College OR UVic Victoria BC news announcement"
-    weight: 0.9
-    category: "Events"
 
   # --- Housing & Ferries ---
   - name: "BC Ferries"
