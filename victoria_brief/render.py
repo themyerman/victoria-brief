@@ -291,6 +291,7 @@ def _coastal_right_panel(
     wildfire: Optional[dict] = None,
     transit: Optional[list] = None,
     webcam_url: Optional[str] = None,
+    trail_data: Optional[dict] = None,
 ) -> str:
     sections = []
 
@@ -383,6 +384,32 @@ def _coastal_right_panel(
             f'</div>'
         )
 
+    if trail_data:
+        featured = trail_data.get("featured", {})
+        feat_html = ""
+        if featured:
+            feat_link = featured.get("url", "")
+            feat_name = featured.get("name", "")
+            feat_type = featured.get("type", "")
+            feat_km   = featured.get("km", "")
+            name_html = f'<a href="{feat_link}" target="_blank">{feat_name}</a>' if feat_link else feat_name
+            feat_html = (
+                f'<p class="crp-trail-feat">&#127956; {name_html}'
+                f'<span class="crp-fire-meta"> · {feat_type} · {feat_km}</span></p>'
+            )
+        tf_url = trail_data.get("trailforks_url", "")
+        tf_link = f' <a href="{tf_url}" target="_blank" class="crp-trail-link">Trailforks →</a>' if tf_url else ""
+        sections.append(
+            f'<div class="crp-section">'
+            f'<h4 class="crp-h4">&#128692; Trails &amp; Cycling</h4>'
+            f'<p class="crp-trail-status">{trail_data.get("icon","🟢")} '
+            f'<strong>{trail_data.get("condition","")} — {trail_data.get("label","")}</strong>'
+            f'<span class="crp-transit-desc"> · {trail_data.get("note","")}</span></p>'
+            f'{feat_html}'
+            f'<p class="coastal-src">Based on {trail_data.get("precip_24h",0)}mm rain last 24h{tf_link}</p>'
+            f'</div>'
+        )
+
     if mini:
         sections.append(f'<div class="crp-minigrid">{"".join(mini)}</div>')
 
@@ -454,9 +481,10 @@ def _coastal_strip(
     wildfire: Optional[dict] = None,
     transit: Optional[list] = None,
     webcam_url: Optional[str] = None,
+    trail_data: Optional[dict] = None,
 ) -> str:
     ferries_html = _ferries_widget(ferry_routes)
-    right_html   = _coastal_right_panel(tides, whales, wildfire, transit, webcam_url)
+    right_html   = _coastal_right_panel(tides, whales, wildfire, transit, webcam_url, trail_data)
     if not ferries_html and not right_html:
         return ""
     return f'<div class="coastal-strip">{ferries_html}{right_html}</div>'
@@ -599,6 +627,7 @@ def to_html(
     wildfire: Optional[dict] = None,
     transit: Optional[list] = None,
     webcam_url: Optional[str] = None,
+    trail_data: Optional[dict] = None,
     entities: Optional[dict] = None,
     photos: Optional[list] = None,
 ) -> str:
@@ -612,6 +641,7 @@ def to_html(
         tides or [], ferries or [],
         whales=whales, wildfire=wildfire,
         transit=transit, webcam_url=webcam_url,
+        trail_data=trail_data,
     )
     ner_html     = _ner_card(entities or {})
 
@@ -764,6 +794,12 @@ def to_html(
   .crp-fire-count {{ font-size:0.82em; margin:0 0 6px; color:#333; }}
   .crp-fire-meta {{ font-size:0.78em; color:#888; margin-left:4px; }}
   .crp-transit-desc {{ font-size:0.78em; color:#666; }}
+  .crp-trail-status {{ font-size:0.82em; margin:0 0 5px; }}
+  .crp-trail-feat {{ font-size:0.82em; margin:4px 0 0; color:#333; }}
+  .crp-trail-feat a {{ color:#1a1a2e; text-decoration:none; }}
+  .crp-trail-feat a:hover {{ color:#1a6b9a; text-decoration:underline; }}
+  .crp-trail-link {{ font-size:0.85em; color:#1a6b9a; text-decoration:none; margin-left:4px; }}
+  .crp-trail-link:hover {{ text-decoration:underline; }}
   .crp-minigrid {{ display:grid; grid-template-columns:1fr 1fr; gap:0; }}
   .crp-mini {{ padding:10px 14px; border-top:1px solid #eee; }}
   .crp-mini:nth-child(even) {{ border-left:1px solid #eee; }}

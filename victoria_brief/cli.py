@@ -9,7 +9,7 @@ from .config import load_config
 from .sources import fetch_all
 from .nlp import deduplicate, score_items, find_major_stories, fill_major_stories, summarize_item, sort_sources, extract_entities
 from .render import to_html
-from . import mailer, thumbnails, weather, photos, tides, ferries, wildfire, transit, whale
+from . import mailer, thumbnails, weather, photos, tides, ferries, wildfire, transit, whale, trails
 
 
 def main() -> None:
@@ -47,7 +47,20 @@ def main() -> None:
 
     processed = sort_sources(processed, source_weights, top_n=3)
 
-    # Limit grid to 6 named cards + 1 "Other News" catchall.
+    # Pull Events-category sources out BEFORE the 6-card grid limit so they
+    # always flow through to the events section at the bottom of the page.
+    event_sources: dict[str, list[dict]] = {
+        name: items
+        for name, items in processed.items()
+        if categories.get(name) == "Events"
+    }
+    processed = {
+        name: items
+        for name, items in processed.items()
+        if categories.get(name) != "Events"
+    }
+
+    # Limit grid to 6 named cards.
     # Two-pass: pinned sources are reserved first, then gravity-sorted
     # sources fill remaining slots, so pinned cards always appear.
     TOP_CARDS = 6
@@ -82,6 +95,7 @@ def main() -> None:
 
     print("Fetching thumbnails...")
     processed = thumbnails.enrich(processed, top_n=3)
+    event_sources = thumbnails.enrich(event_sources, top_n=3)
 
     print("Fetching weather...")
     forecast = weather.fetch_forecast()
@@ -103,14 +117,19 @@ def main() -> None:
     print("Fetching whale sightings...")
     whale_sightings = whale.fetch_whale_sightings()
 
+    print("Fetching trail conditions...")
+    trail_data = trails.fetch_trail_conditions()
+
     print("Fetching photos...")
     photo_list = photos.fetch_photos(n=4)
 
     print("Extracting entities...")
-    entities = extract_entities(processed)
+    # Merge event sources back for rendering (events section + entity extraction)
+    all_sources = {**processed, **event_sources}
+    entities = extract_entities(all_sources)
 
     html = to_html(
-        processed,
+        all_sources,
         major_stories=major,
         top_n=3,
         categories=categories,
@@ -122,6 +141,7 @@ def main() -> None:
         whales=whale_sightings,
         wildfire=wildfire_data,
         transit=transit_alerts,
+        trail_data=trail_data,
         entities=entities,
         photos=photo_list,
     )

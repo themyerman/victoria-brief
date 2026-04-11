@@ -7,6 +7,12 @@ BRIEF="$REPO/index.html"
 LOG="$HOME/Library/Logs/victoria-brief.log"
 ENV="$HOME/.victoria-brief.env"
 
+# Pass --no-sms to skip iMessage notifications (used for afternoon/evening runs)
+SEND_SMS=1
+for arg in "$@"; do
+  [ "$arg" = "--no-sms" ] && SEND_SMS=0
+done
+
 # ── Helpers ───────────────────────────────────────────────────────────────────
 
 log() { echo "$(date '+%Y-%m-%d %H:%M:%S')  $*" >> "$LOG"; }
@@ -90,19 +96,23 @@ if [ $UPLOADED -eq 0 ]; then
   exit 0  # don't send iMessages if not published
 fi
 
-# ── iMessage notifications ────────────────────────────────────────────────────
+# ── iMessage notifications (8:30am run only) ─────────────────────────────────
 
-MSG="Good morning! Today's Victoria Brief is ready: https://myerman.art/victoria-brief/"
-for NUMBER in "+17202928866" "+17204591466"; do
-  osascript << APPLESCRIPT >> "$LOG" 2>&1
+if [ $SEND_SMS -eq 1 ]; then
+  MSG="Good morning! Today's Victoria Brief is ready: https://myerman.art/victoria-brief/"
+  for NUMBER in "+17202928866" "+17204591466"; do
+    osascript << APPLESCRIPT >> "$LOG" 2>&1
 tell application "Messages"
   set targetService to 1st service whose service type = iMessage
   set targetBuddy to participant "$NUMBER" of targetService
   send "$MSG" to targetBuddy
 end tell
 APPLESCRIPT
-  log "  iMessage sent to $NUMBER"
-done
+    log "  iMessage sent to $NUMBER"
+  done
+else
+  log "SMS skipped (--no-sms flag)"
+fi
 
 notify "✅ Brief published — https://myerman.art/victoria-brief/"
 log "Done."
