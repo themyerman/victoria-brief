@@ -289,9 +289,7 @@ def _coastal_right_panel(
     tides: list,
     whales: Optional[list] = None,
     wildfire: Optional[dict] = None,
-    transit: Optional[list] = None,
     webcam_url: Optional[str] = None,
-    trail_data: Optional[dict] = None,
 ) -> str:
     sections = []
 
@@ -370,46 +368,6 @@ def _coastal_right_panel(
             f'</div>'
         )
 
-    if transit:
-        rows = "".join(
-            f'<li>{a.get("icon","ℹ️")} <strong>{a.get("header","")}</strong>'
-            f'<span class="crp-transit-desc"> — {a.get("description","")}</span></li>'
-            for a in transit[:4]
-        )
-        sections.append(
-            f'<div class="crp-section">'
-            f'<h4 class="crp-h4">🚌 BC Transit Alerts</h4>'
-            f'<ul class="crp-list">{rows}</ul>'
-            f'<p class="coastal-src">Source: BC Transit GTFS-RT</p>'
-            f'</div>'
-        )
-
-    if trail_data:
-        featured = trail_data.get("featured", {})
-        feat_html = ""
-        if featured:
-            feat_link = featured.get("url", "")
-            feat_name = featured.get("name", "")
-            feat_type = featured.get("type", "")
-            feat_km   = featured.get("km", "")
-            name_html = f'<a href="{feat_link}" target="_blank">{feat_name}</a>' if feat_link else feat_name
-            feat_html = (
-                f'<p class="crp-trail-feat">&#127956; {name_html}'
-                f'<span class="crp-fire-meta"> · {feat_type} · {feat_km}</span></p>'
-            )
-        tf_url = trail_data.get("trailforks_url", "")
-        tf_link = f' <a href="{tf_url}" target="_blank" class="crp-trail-link">Trailforks →</a>' if tf_url else ""
-        sections.append(
-            f'<div class="crp-section">'
-            f'<h4 class="crp-h4">&#128692; Trails &amp; Cycling</h4>'
-            f'<p class="crp-trail-status">{trail_data.get("icon","🟢")} '
-            f'<strong>{trail_data.get("condition","")} — {trail_data.get("label","")}</strong>'
-            f'<span class="crp-transit-desc"> · {trail_data.get("note","")}</span></p>'
-            f'{feat_html}'
-            f'<p class="coastal-src">Based on {trail_data.get("precip_24h",0)}mm rain last 24h{tf_link}</p>'
-            f'</div>'
-        )
-
     if mini:
         sections.append(f'<div class="crp-minigrid">{"".join(mini)}</div>')
 
@@ -461,17 +419,63 @@ def _ferries_widget(routes: list) -> str:
         )
     if not routes_html:
         return ""
+
+    sections = [
+        f'<h3 class="coastal-h3">⛴ BC Ferries</h3>',
+        *routes_html,
+        f'<p class="coastal-src">Source: bcferriesapi.ca</p>',
+    ]
+    return "\n".join(sections)
+
+
+def _transit_section(transit: Optional[list]) -> str:
+    if not transit:
+        return ""
+    rows = "".join(
+        f'<li>{a.get("icon","ℹ️")} <strong>{a.get("header","")}</strong>'
+        f'<span class="crp-transit-desc"> — {a.get("description","")}</span></li>'
+        for a in transit[:4]
+    )
     return (
-        f'<div class="coastal-panel ferries-panel">'
-        f'<h3 class="coastal-h3">⛴ BC Ferries</h3>'
-        f'{"".join(routes_html)}'
-        f'<p class="coastal-src">Source: bcferriesapi.ca</p>'
+        f'<div class="transport-section">'
+        f'<h3 class="coastal-h3">🚌 BC Transit Alerts</h3>'
+        f'<ul class="crp-list">{rows}</ul>'
+        f'<p class="coastal-src">Source: BC Transit GTFS-RT</p>'
+        f'</div>'
+    )
+
+
+def _trails_section(trail_data: Optional[dict]) -> str:
+    if not trail_data:
+        return ""
+    featured = trail_data.get("featured", {})
+    feat_html = ""
+    if featured:
+        feat_link = featured.get("url", "")
+        feat_name = featured.get("name", "")
+        feat_type = featured.get("type", "")
+        feat_km   = featured.get("km", "")
+        name_html = f'<a href="{feat_link}" target="_blank">{feat_name}</a>' if feat_link else feat_name
+        feat_html = (
+            f'<p class="crp-trail-feat">&#127956; {name_html}'
+            f'<span class="crp-fire-meta"> · {feat_type} · {feat_km}</span></p>'
+        )
+    tf_url = trail_data.get("trailforks_url", "")
+    tf_link = f' <a href="{tf_url}" target="_blank" class="crp-trail-link">Trailforks →</a>' if tf_url else ""
+    return (
+        f'<div class="transport-section">'
+        f'<h3 class="coastal-h3">&#128692; Trails &amp; Cycling</h3>'
+        f'<p class="crp-trail-status">{trail_data.get("icon","🟢")} '
+        f'<strong>{trail_data.get("condition","")} — {trail_data.get("label","")}</strong>'
+        f'<span class="crp-transit-desc"> · {trail_data.get("note","")}</span></p>'
+        f'{feat_html}'
+        f'<p class="coastal-src">Based on {trail_data.get("precip_24h",0)}mm rain last 24h{tf_link}</p>'
         f'</div>'
     )
 
 
 # ---------------------------------------------------------------------------
-# Coastal strip: ferries (left) + right panel (tides + extras)
+# Coastal strip: transport (left) + nature/alerts (right)
 # ---------------------------------------------------------------------------
 
 def _coastal_strip(
@@ -483,11 +487,18 @@ def _coastal_strip(
     webcam_url: Optional[str] = None,
     trail_data: Optional[dict] = None,
 ) -> str:
-    ferries_html = _ferries_widget(ferry_routes)
-    right_html   = _coastal_right_panel(tides, whales, wildfire, transit, webcam_url, trail_data)
-    if not ferries_html and not right_html:
+    ferries_html  = _ferries_widget(ferry_routes)
+    transit_html  = _transit_section(transit)
+    trails_html   = _trails_section(trail_data)
+    transport_inner = ferries_html + transit_html + trails_html
+    transport_html = (
+        f'<div class="coastal-panel transport-panel">{transport_inner}</div>'
+        if transport_inner else ""
+    )
+    right_html = _coastal_right_panel(tides, whales, wildfire, webcam_url)
+    if not transport_html and not right_html:
         return ""
-    return f'<div class="coastal-strip">{ferries_html}{right_html}</div>'
+    return f'<div class="coastal-strip">{transport_html}{right_html}</div>'
 
 
 # ---------------------------------------------------------------------------
@@ -774,7 +785,8 @@ def to_html(
   .coastal-strip {{ display:flex; gap:14px; margin-bottom:16px; align-items:stretch; }}
   .coastal-panel {{ background:#fff; border:1px solid #ddd; border-radius:7px;
                     padding:12px 16px; min-width:0; }}
-  .ferries-panel {{ flex:1.4; }}
+  .transport-panel {{ flex:1.4; }}
+  .transport-section {{ border-top:1px solid #eee; padding-top:10px; margin-top:10px; }}
   .coastal-right {{ flex:1; display:flex; flex-direction:column; gap:0; padding:0; overflow:visible; border-radius:7px; }}
   .coastal-h3 {{ margin:0 0 10px; font-size:0.72em; text-transform:uppercase;
                  letter-spacing:0.07em; color:#555; }}
