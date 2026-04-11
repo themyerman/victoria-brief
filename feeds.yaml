@@ -98,7 +98,7 @@ sources:
   - name: "Victoria Events"
     search: "Victoria BC cultural event this week"
     weight: 0.9
-    category: "Arts & Culture"
+    category: "Events"
 
   # --- University & Research ---
   - name: "UVic News"
@@ -109,7 +109,7 @@ sources:
   - name: "Camosun & UVic Events"
     search: "Camosun College OR UVic Victoria BC news announcement"
     weight: 0.9
-    category: "Education"
+    category: "Events"
 
   # --- Housing & Ferries ---
   - name: "BC Ferries"

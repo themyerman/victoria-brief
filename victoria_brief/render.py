@@ -23,6 +23,7 @@ def _rel_time(published) -> str:
 
 
 # Display order for categories — cards are sorted by this within the flat grid.
+# "Events" is excluded from the grid and rendered in its own bottom section.
 _CATEGORY_ORDER = [
     "BC News",
     "Victoria & Island",
@@ -33,6 +34,7 @@ _CATEGORY_ORDER = [
     "Housing & Transit",
     "Other",
 ]
+_EVENTS_CATEGORY = "Events"
 
 
 # ---------------------------------------------------------------------------
@@ -280,32 +282,96 @@ def _weather_widget(forecast: list, sun: dict = None, aqhi: dict = None) -> str:
 
 
 # ---------------------------------------------------------------------------
-# Tides widget
+# Coastal right panel: tides + (whale / wildfire / transit / webcam stubs)
 # ---------------------------------------------------------------------------
 
-def _tides_widget(tides: list) -> str:
-    if not tides:
-        return ""
-    events = []
-    for t in tides:
-        past_cls  = " tide-past" if t.get("past") else ""
-        type_str  = t.get("type", "")
-        type_cls  = "tide-high" if type_str == "High" else "tide-low"
-        icon      = "🌊" if type_str == "High" else "〰️"
-        events.append(
-            f'<div class="tide-event{past_cls}">'
-            f'  <span class="tide-type {type_cls}">{icon} {type_str}</span>'
-            f'  <span class="tide-time">{t.get("time_str","")}</span>'
-            f'  <span class="tide-ht">{t.get("value_m","")}m / {t.get("value_ft","")}ft</span>'
+def _coastal_right_panel(
+    tides: list,
+    whales: Optional[list] = None,
+    wildfire: Optional[list] = None,
+    transit: Optional[list] = None,
+    webcam_url: Optional[str] = None,
+) -> str:
+    sections = []
+
+    # ── Tides ─────────────────────────────────────────────────────────────────
+    if tides:
+        events = []
+        for t in tides:
+            past_cls = " tide-past" if t.get("past") else ""
+            type_str = t.get("type", "")
+            type_cls = "tide-high" if type_str == "High" else "tide-low"
+            icon     = "🌊" if type_str == "High" else "〰️"
+            events.append(
+                f'<div class="tide-event{past_cls}">'
+                f'<span class="tide-type {type_cls}">{icon} {type_str}</span>'
+                f'<span class="tide-time">{t.get("time_str","")}</span>'
+                f'<span class="tide-ht">{t.get("value_m","")}m / {t.get("value_ft","")}ft</span>'
+                f'</div>'
+            )
+        sections.append(
+            f'<div class="crp-section">'
+            f'<h4 class="crp-h4">🌊 Tides — Victoria Harbour</h4>'
+            f'<div class="tides-row">{"".join(events)}</div>'
+            f'<p class="coastal-src">Source: Canadian Hydrographic Service</p>'
             f'</div>'
         )
-    return (
-        f'<div class="coastal-panel tides-panel">'
-        f'<h3 class="coastal-h3">🌊 Tides — Victoria Harbour</h3>'
-        f'<div class="tides-row">{"".join(events)}</div>'
-        f'<p class="coastal-src">Source: Canadian Hydrographic Service</p>'
-        f'</div>'
-    )
+
+    # ── Mini grid: webcam | whale | wildfire | transit ─────────────────────────
+    mini = []
+
+    if webcam_url:
+        mini.append(
+            f'<div class="crp-mini crp-webcam">'
+            f'<h5 class="crp-h5">📷 Harbour Cam</h5>'
+            f'<img src="{webcam_url}" class="webcam-img" alt="Victoria Harbour webcam">'
+            f'</div>'
+        )
+
+    if whales:
+        items = "".join(
+            f'<li><a href="{w.get("link","")}" target="_blank">{w.get("title","")}</a>'
+            f'<span class="crp-age">{_rel_time(w.get("published"))}</span></li>'
+            for w in whales[:3]
+        )
+        sections.append(
+            f'<div class="crp-section">'
+            f'<h4 class="crp-h4">🐋 Whale Sightings</h4>'
+            f'<ul class="crp-list">{items}</ul>'
+            f'</div>'
+        )
+
+    if wildfire:
+        items = "".join(
+            f'<li><a href="{w.get("link","")}" target="_blank">{w.get("title","")}</a>'
+            f'<span class="crp-age">{_rel_time(w.get("published"))}</span></li>'
+            for w in wildfire[:3]
+        )
+        sections.append(
+            f'<div class="crp-section">'
+            f'<h4 class="crp-h4">🔥 Wildfire Alerts</h4>'
+            f'<ul class="crp-list">{items}</ul>'
+            f'</div>'
+        )
+
+    if transit:
+        items = "".join(
+            f'<li>{a.get("text","")}</li>'
+            for a in transit[:4]
+        )
+        sections.append(
+            f'<div class="crp-section">'
+            f'<h4 class="crp-h4">🚌 BC Transit Alerts</h4>'
+            f'<ul class="crp-list">{items}</ul>'
+            f'</div>'
+        )
+
+    if mini:
+        sections.append(f'<div class="crp-minigrid">{"".join(mini)}</div>')
+
+    if not sections:
+        return ""
+    return f'<div class="coastal-panel coastal-right">{"".join(sections)}</div>'
 
 
 # ---------------------------------------------------------------------------
@@ -361,15 +427,22 @@ def _ferries_widget(routes: list) -> str:
 
 
 # ---------------------------------------------------------------------------
-# Coastal strip (tides + ferries side by side)
+# Coastal strip: ferries (left) + right panel (tides + extras)
 # ---------------------------------------------------------------------------
 
-def _coastal_strip(tides: list, ferry_routes: list) -> str:
-    tides_html   = _tides_widget(tides)
+def _coastal_strip(
+    tides: list,
+    ferry_routes: list,
+    whales: Optional[list] = None,
+    wildfire: Optional[list] = None,
+    transit: Optional[list] = None,
+    webcam_url: Optional[str] = None,
+) -> str:
     ferries_html = _ferries_widget(ferry_routes)
-    if not tides_html and not ferries_html:
+    right_html   = _coastal_right_panel(tides, whales, wildfire, transit, webcam_url)
+    if not ferries_html and not right_html:
         return ""
-    return f'<div class="coastal-strip">{tides_html}{ferries_html}</div>'
+    return f'<div class="coastal-strip">{ferries_html}{right_html}</div>'
 
 
 # ---------------------------------------------------------------------------
@@ -410,6 +483,59 @@ def _ner_card(entities: dict) -> str:
 
 
 # ---------------------------------------------------------------------------
+# Events section (full-width, bottom of page)
+# ---------------------------------------------------------------------------
+
+def _events_section(
+    sources: dict[str, list[dict]],
+    categories: Optional[dict[str, str]],
+    top_n: int = 8,
+) -> str:
+    """Pull all Events-category sources into a dedicated bottom section."""
+    items = []
+    for name, source_items in sources.items():
+        cat = (categories or {}).get(name, "")
+        if cat == _EVENTS_CATEGORY:
+            items.extend(source_items)
+
+    if not items:
+        return ""
+
+    # Deduplicate by link, sort by score
+    seen: set[str] = set()
+    unique = []
+    for item in sorted(items, key=lambda x: x.get("_score", 0), reverse=True):
+        link = item.get("link", "")
+        if link and link not in seen:
+            seen.add(link)
+            unique.append(item)
+
+    cards = []
+    for item in unique[:top_n]:
+        title     = item.get("title", "")
+        link      = item.get("link", "")
+        summary   = (item.get("summary", "") or "")[:120].strip()
+        thumbnail = item.get("thumbnail", "")
+        age       = _rel_time(item.get("published"))
+        anchor    = f'<a href="{link}" target="_blank">{title}</a>' if link else title
+        age_html  = f'<span class="age">{age}</span>' if age else ""
+        thumb_html = f'<img class="thumb" src="{thumbnail}" alt="">' if thumbnail else ""
+        snip_html  = f'<p class="snip">{summary}</p>' if summary else ""
+        cards.append(
+            f'<div class="event-card">'
+            f'{thumb_html}'
+            f'<strong>{anchor}{age_html}</strong>'
+            f'{snip_html}'
+            f'</div>'
+        )
+
+    return f"""<section class="events-section">
+  <h2 class="events-h2">&#128197; Events &amp; Community</h2>
+  <div class="events-grid">{"".join(cards)}</div>
+</section>"""
+
+
+# ---------------------------------------------------------------------------
 # Full page
 # ---------------------------------------------------------------------------
 
@@ -431,6 +557,8 @@ def _flat_grid(
     cards = []
     for name in sorted(sources.keys(), key=sort_key):
         cat = (categories or {}).get(name, "Other")
+        if cat == _EVENTS_CATEGORY:
+            continue   # handled separately in events section
         card = _source_card(name, sources[name], top_n, category=cat)
         if card:
             cards.append(card)
@@ -450,7 +578,10 @@ def to_html(
     aqhi: Optional[dict] = None,
     tides: Optional[list] = None,
     ferries: Optional[list] = None,
-    keywords: Optional[list] = None,
+    whales: Optional[list] = None,
+    wildfire: Optional[list] = None,
+    transit: Optional[list] = None,
+    webcam_url: Optional[str] = None,
     entities: Optional[dict] = None,
     photos: Optional[list] = None,
 ) -> str:
@@ -458,9 +589,13 @@ def to_html(
 
     major        = _major_stories_section(major_stories or [], photo_list=photos)
     grid         = _flat_grid(sources, categories, top_n)
+    events_html  = _events_section(sources, categories)
     weather_html = _weather_widget(forecast or [], sun=sun or {}, aqhi=aqhi or {})
-    coastal_html = _coastal_strip(tides or [], ferries or [])
-    kw_html      = _keyword_strip(keywords or [])
+    coastal_html = _coastal_strip(
+        tides or [], ferries or [],
+        whales=whales, wildfire=wildfire,
+        transit=transit, webcam_url=webcam_url,
+    )
     ner_html     = _ner_card(entities or {})
 
     return f"""<!DOCTYPE html>
@@ -577,11 +712,6 @@ def to_html(
   .wx-temp {{ font-size:0.85em; font-weight:600; color:#222; }}
   .wx-rain {{ font-size:0.72em; color:#1a6b9a; margin-top:2px; }}
 
-  /* Keywords */
-  .kw-strip {{ margin-bottom:12px; display:flex; flex-wrap:wrap; align-items:center; gap:5px; }}
-  .kw-label {{ font-size:0.72em; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; color:#888; }}
-  .kw-pill {{ font-size:0.75em; background:#eee; color:#444; padding:2px 8px; border-radius:10px; }}
-
   /* Story age */
   .age {{ font-size:0.75em; color:#aaa; margin-left:4px; white-space:nowrap; }}
 
@@ -593,27 +723,44 @@ def to_html(
   .ner-col ul {{ list-style:none; padding:0; margin:0; display:flex; flex-direction:column; gap:4px; }}
   .ner-col li {{ font-size:0.83em; color:#333; }}
 
-  /* Coastal strip (tides + ferries) */
-  .coastal-strip {{ display:flex; gap:14px; margin-bottom:16px; }}
+  /* Coastal strip */
+  .coastal-strip {{ display:flex; gap:14px; margin-bottom:16px; align-items:flex-start; }}
   .coastal-panel {{ background:#fff; border:1px solid #ddd; border-radius:7px;
-                    padding:12px 16px; flex:1; min-width:0; }}
-  .tides-panel {{ flex:1.1; }}
+                    padding:12px 16px; min-width:0; }}
   .ferries-panel {{ flex:1.4; }}
+  .coastal-right {{ flex:1; display:flex; flex-direction:column; gap:0; padding:0; overflow:hidden; }}
   .coastal-h3 {{ margin:0 0 10px; font-size:0.72em; text-transform:uppercase;
                  letter-spacing:0.07em; color:#555; }}
-  .coastal-src {{ margin:8px 0 0; font-size:0.65em; color:#bbb; }}
+  .coastal-src {{ margin:6px 0 0; font-size:0.65em; color:#bbb; }}
+
+  /* Coastal right panel sections */
+  .crp-section {{ padding:12px 16px; border-bottom:1px solid #eee; }}
+  .crp-section:last-child {{ border-bottom:none; }}
+  .crp-h4 {{ margin:0 0 8px; font-size:0.72em; text-transform:uppercase;
+             letter-spacing:0.07em; color:#555; }}
+  .crp-list {{ list-style:none; padding:0; margin:0; display:flex; flex-direction:column; gap:5px; }}
+  .crp-list li {{ font-size:0.82em; color:#333; }}
+  .crp-list a {{ color:#1a1a2e; text-decoration:none; }}
+  .crp-list a:hover {{ color:#1a6b9a; text-decoration:underline; }}
+  .crp-age {{ font-size:0.78em; color:#aaa; margin-left:4px; }}
+  .crp-minigrid {{ display:grid; grid-template-columns:1fr 1fr; gap:0; }}
+  .crp-mini {{ padding:10px 14px; border-top:1px solid #eee; }}
+  .crp-mini:nth-child(even) {{ border-left:1px solid #eee; }}
+  .crp-h5 {{ margin:0 0 6px; font-size:0.7em; text-transform:uppercase;
+             letter-spacing:0.06em; color:#555; }}
+  .webcam-img {{ width:100%; border-radius:4px; display:block; object-fit:cover; max-height:90px; }}
 
   /* Tides */
-  .tides-row {{ display:flex; gap:10px; flex-wrap:wrap; }}
+  .tides-row {{ display:flex; gap:8px; flex-wrap:wrap; }}
   .tide-event {{ display:flex; flex-direction:column; align-items:center; gap:3px;
-                 background:#f7f9fc; border-radius:6px; padding:8px 12px; min-width:90px; }}
-  .tide-event.tide-past {{ opacity:0.45; }}
-  .tide-type {{ font-size:0.72em; font-weight:700; text-transform:uppercase;
+                 background:#f7f9fc; border-radius:6px; padding:8px 12px; min-width:86px; }}
+  .tide-event.tide-past {{ opacity:0.4; }}
+  .tide-type {{ font-size:0.7em; font-weight:700; text-transform:uppercase;
                 letter-spacing:0.05em; padding:2px 6px; border-radius:3px; }}
   .tide-high {{ background:#1a6b9a; color:#fff; }}
   .tide-low  {{ background:#5a8a6a; color:#fff; }}
-  .tide-time {{ font-size:0.88em; font-weight:600; color:#222; }}
-  .tide-ht   {{ font-size:0.75em; color:#777; }}
+  .tide-time {{ font-size:0.85em; font-weight:600; color:#222; }}
+  .tide-ht   {{ font-size:0.73em; color:#777; }}
 
   /* Ferries */
   .ferry-route {{ margin-bottom:10px; }}
@@ -637,6 +784,20 @@ def to_html(
   .fill-mid  {{ background:#fff3cd; color:#856404; }}
   .fill-high {{ background:#f8d7da; color:#721c24; }}
   .vessel-alert {{ font-size:0.78em; color:#c0392b; }}
+
+  /* Events section */
+  .events-section {{ background:#fff; border:1px solid #ddd; border-radius:7px;
+                     padding:14px 20px; margin-top:16px; }}
+  .events-h2 {{ margin:0 0 12px; font-size:0.85em; text-transform:uppercase;
+                letter-spacing:0.06em; color:#2d6a4f; border-bottom:1px solid #eee;
+                padding-bottom:8px; }}
+  .events-grid {{ display:grid; grid-template-columns:repeat(4,1fr); gap:12px; }}
+  .event-card {{ font-size:0.85em; display:flex; flex-direction:column; gap:4px; }}
+  .event-card strong a {{ color:#1a1a2e; text-decoration:none; line-height:1.35; display:block; }}
+  .event-card strong a:hover {{ color:#2d6a4f; text-decoration:underline; }}
+  @media (max-width:900px) {{ .events-grid {{ grid-template-columns:repeat(2,1fr); }} }}
+  @media (max-width:520px) {{ .events-grid {{ grid-template-columns:1fr; }} }}
+
   @media (max-width:700px) {{ .coastal-strip {{ flex-direction:column; }} }}
 </style>
 </head><body>
@@ -647,10 +808,10 @@ def to_html(
 </div>
 
 {weather_html}
-{coastal_html}
-{kw_html}
 {major}
+{coastal_html}
 {grid}
+{events_html}
 {ner_html}
 
 <p class="meta">Generated by victoria-brief.</p>

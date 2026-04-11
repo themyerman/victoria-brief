@@ -7,7 +7,7 @@ from pathlib import Path
 
 from .config import load_config
 from .sources import fetch_all
-from .nlp import deduplicate, score_items, find_major_stories, fill_major_stories, summarize_item, sort_sources, top_keywords, extract_entities
+from .nlp import deduplicate, score_items, find_major_stories, fill_major_stories, summarize_item, sort_sources, extract_entities
 from .render import to_html
 from . import mailer, thumbnails, weather, photos, tides, ferries
 
@@ -85,8 +85,7 @@ def main() -> None:
     print("Fetching photos...")
     photo_list = photos.fetch_photos(n=4)
 
-    print("Extracting keywords and entities...")
-    keywords = top_keywords(processed)
+    print("Extracting entities...")
     entities = extract_entities(processed)
 
     html = to_html(
@@ -99,7 +98,6 @@ def main() -> None:
         aqhi=aqhi,
         tides=tide_list,
         ferries=ferry_routes,
-        keywords=keywords,
         entities=entities,
         photos=photo_list,
     )
