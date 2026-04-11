@@ -234,10 +234,10 @@ def _glance_section(
 
 
 # ---------------------------------------------------------------------------
-# Weather widget
+# Weather widget (with optional sun + air quality tile)
 # ---------------------------------------------------------------------------
 
-def _weather_widget(forecast: list) -> str:
+def _weather_widget(forecast: list, sun: dict = None, aqhi: dict = None) -> str:
     if not forecast:
         return ""
     days_html = []
@@ -260,7 +260,116 @@ def _weather_widget(forecast: list) -> str:
             f'{rain_html}'
             f'</div>'
         )
+
+    # Optional sun & air quality tile
+    if sun or aqhi:
+        parts = ['<div class="wx-label">Sun &amp; Air</div>', '<div class="wx-icon">🌅</div>']
+        if sun:
+            parts.append(f'<div class="wx-desc">&#x2600;&#xFE0F; {sun.get("sunrise","")} &nbsp; 🌇 {sun.get("sunset","")}</div>')
+            hrs = sun.get("day_length", "").split(":")[0]
+            if hrs:
+                parts.append(f'<div class="wx-desc">{hrs}h of daylight</div>')
+        if aqhi:
+            val = aqhi.get("value", "")
+            lbl = aqhi.get("label", "")
+            ico = aqhi.get("icon", "")
+            parts.append(f'<div class="wx-desc" style="margin-top:4px">Air: {ico} {val} <em>{lbl}</em></div>')
+        days_html.append(f'<div class="wx-day">{"".join(parts)}</div>')
+
     return f'<div class="wx-bar">{"".join(days_html)}</div>'
+
+
+# ---------------------------------------------------------------------------
+# Tides widget
+# ---------------------------------------------------------------------------
+
+def _tides_widget(tides: list) -> str:
+    if not tides:
+        return ""
+    events = []
+    for t in tides:
+        past_cls  = " tide-past" if t.get("past") else ""
+        type_str  = t.get("type", "")
+        type_cls  = "tide-high" if type_str == "High" else "tide-low"
+        icon      = "🌊" if type_str == "High" else "〰️"
+        events.append(
+            f'<div class="tide-event{past_cls}">'
+            f'  <span class="tide-type {type_cls}">{icon} {type_str}</span>'
+            f'  <span class="tide-time">{t.get("time_str","")}</span>'
+            f'  <span class="tide-ht">{t.get("value_m","")}m / {t.get("value_ft","")}ft</span>'
+            f'</div>'
+        )
+    return (
+        f'<div class="coastal-panel tides-panel">'
+        f'<h3 class="coastal-h3">🌊 Tides — Victoria Harbour</h3>'
+        f'<div class="tides-row">{"".join(events)}</div>'
+        f'<p class="coastal-src">Source: Canadian Hydrographic Service</p>'
+        f'</div>'
+    )
+
+
+# ---------------------------------------------------------------------------
+# Ferries widget
+# ---------------------------------------------------------------------------
+
+def _ferries_widget(routes: list) -> str:
+    if not routes:
+        return ""
+    routes_html = []
+    for route in routes:
+        sailings = route.get("sailings", [])
+        if not sailings:
+            continue
+        dep = route.get("from_name", "")
+        arr = route.get("to_name", "")
+        dur = route.get("duration", "")
+        sail_rows = []
+        for s in sailings[:4]:
+            is_current = s.get("status") == "current"
+            cur_cls    = " sailing-current" if is_current else ""
+            fill_cls   = s.get("fill_class", "fill-low")
+            fill_lbl   = s.get("fill_label", "")
+            cur_badge  = '<span class="sail-now">Now</span>' if is_current else ""
+            vs = s.get("vessel_status", "")
+            vs_html = f'<span class="vessel-alert"> ⚠️ {vs}</span>' if vs else ""
+            sail_rows.append(
+                f'<div class="sailing{cur_cls}">'
+                f'  {cur_badge}'
+                f'  <span class="sail-time">{s.get("time","")}</span>'
+                f'  <span class="sail-arr">→ {s.get("arrival_time","")}</span>'
+                f'  <span class="sail-vessel">{s.get("vessel","")}</span>'
+                f'  <span class="sail-fill {fill_cls}">{fill_lbl}</span>'
+                f'  {vs_html}'
+                f'</div>'
+            )
+        routes_html.append(
+            f'<div class="ferry-route">'
+            f'  <div class="ferry-route-hdr">{dep} → {arr}'
+            f'    <span class="ferry-dur">{dur}</span></div>'
+            f'  {"".join(sail_rows)}'
+            f'</div>'
+        )
+    if not routes_html:
+        return ""
+    return (
+        f'<div class="coastal-panel ferries-panel">'
+        f'<h3 class="coastal-h3">⛴ BC Ferries</h3>'
+        f'{"".join(routes_html)}'
+        f'<p class="coastal-src">Source: bcferriesapi.ca</p>'
+        f'</div>'
+    )
+
+
+# ---------------------------------------------------------------------------
+# Coastal strip (tides + ferries side by side)
+# ---------------------------------------------------------------------------
+
+def _coastal_strip(tides: list, ferry_routes: list) -> str:
+    tides_html   = _tides_widget(tides)
+    ferries_html = _ferries_widget(ferry_routes)
+    if not tides_html and not ferries_html:
+        return ""
+    return f'<div class="coastal-strip">{tides_html}{ferries_html}</div>'
 
 
 # ---------------------------------------------------------------------------
@@ -337,17 +446,22 @@ def to_html(
     top_n: int = 3,
     categories: Optional[dict[str, str]] = None,
     forecast: Optional[list] = None,
+    sun: Optional[dict] = None,
+    aqhi: Optional[dict] = None,
+    tides: Optional[list] = None,
+    ferries: Optional[list] = None,
     keywords: Optional[list] = None,
     entities: Optional[dict] = None,
     photos: Optional[list] = None,
 ) -> str:
     today = datetime.now().strftime("%A, %B %-d, %Y")
 
-    major = _major_stories_section(major_stories or [], photo_list=photos)
-    grid = _flat_grid(sources, categories, top_n)
-    weather_html = _weather_widget(forecast or [])
-    kw_html = _keyword_strip(keywords or [])
-    ner_html = _ner_card(entities or {})
+    major        = _major_stories_section(major_stories or [], photo_list=photos)
+    grid         = _flat_grid(sources, categories, top_n)
+    weather_html = _weather_widget(forecast or [], sun=sun or {}, aqhi=aqhi or {})
+    coastal_html = _coastal_strip(tides or [], ferries or [])
+    kw_html      = _keyword_strip(keywords or [])
+    ner_html     = _ner_card(entities or {})
 
     return f"""<!DOCTYPE html>
 <html lang="en"><head>
@@ -478,6 +592,52 @@ def to_html(
   .ner-col h4 {{ margin:0 0 8px; font-size:0.72em; text-transform:uppercase; letter-spacing:0.06em; color:#555; }}
   .ner-col ul {{ list-style:none; padding:0; margin:0; display:flex; flex-direction:column; gap:4px; }}
   .ner-col li {{ font-size:0.83em; color:#333; }}
+
+  /* Coastal strip (tides + ferries) */
+  .coastal-strip {{ display:flex; gap:14px; margin-bottom:16px; }}
+  .coastal-panel {{ background:#fff; border:1px solid #ddd; border-radius:7px;
+                    padding:12px 16px; flex:1; min-width:0; }}
+  .tides-panel {{ flex:1.1; }}
+  .ferries-panel {{ flex:1.4; }}
+  .coastal-h3 {{ margin:0 0 10px; font-size:0.72em; text-transform:uppercase;
+                 letter-spacing:0.07em; color:#555; }}
+  .coastal-src {{ margin:8px 0 0; font-size:0.65em; color:#bbb; }}
+
+  /* Tides */
+  .tides-row {{ display:flex; gap:10px; flex-wrap:wrap; }}
+  .tide-event {{ display:flex; flex-direction:column; align-items:center; gap:3px;
+                 background:#f7f9fc; border-radius:6px; padding:8px 12px; min-width:90px; }}
+  .tide-event.tide-past {{ opacity:0.45; }}
+  .tide-type {{ font-size:0.72em; font-weight:700; text-transform:uppercase;
+                letter-spacing:0.05em; padding:2px 6px; border-radius:3px; }}
+  .tide-high {{ background:#1a6b9a; color:#fff; }}
+  .tide-low  {{ background:#5a8a6a; color:#fff; }}
+  .tide-time {{ font-size:0.88em; font-weight:600; color:#222; }}
+  .tide-ht   {{ font-size:0.75em; color:#777; }}
+
+  /* Ferries */
+  .ferry-route {{ margin-bottom:10px; }}
+  .ferry-route:last-child {{ margin-bottom:0; }}
+  .ferry-route-hdr {{ font-size:0.8em; font-weight:700; color:#333; margin-bottom:6px; }}
+  .ferry-dur {{ font-weight:400; color:#888; margin-left:6px; }}
+  .sailing {{ display:flex; align-items:center; gap:8px; font-size:0.82em;
+              padding:5px 0; border-bottom:1px solid #f0f0f0; flex-wrap:wrap; }}
+  .sailing:last-child {{ border-bottom:none; }}
+  .sailing-current {{ background:#fffbe6; border-radius:4px; padding:5px 8px;
+                      border-bottom:none; margin-bottom:4px; }}
+  .sail-now {{ font-size:0.7em; font-weight:700; text-transform:uppercase;
+               background:#e6a817; color:#fff; border-radius:3px; padding:1px 5px; }}
+  .sail-time {{ font-weight:600; color:#1a1a2e; white-space:nowrap; }}
+  .sail-arr  {{ color:#888; white-space:nowrap; }}
+  .sail-vessel {{ flex:1; color:#555; font-size:0.9em; white-space:nowrap;
+                  overflow:hidden; text-overflow:ellipsis; }}
+  .sail-fill {{ font-size:0.78em; font-weight:700; padding:2px 7px;
+                border-radius:10px; white-space:nowrap; }}
+  .fill-low  {{ background:#d4edda; color:#155724; }}
+  .fill-mid  {{ background:#fff3cd; color:#856404; }}
+  .fill-high {{ background:#f8d7da; color:#721c24; }}
+  .vessel-alert {{ font-size:0.78em; color:#c0392b; }}
+  @media (max-width:700px) {{ .coastal-strip {{ flex-direction:column; }} }}
 </style>
 </head><body>
 
@@ -487,6 +647,7 @@ def to_html(
 </div>
 
 {weather_html}
+{coastal_html}
 {kw_html}
 {major}
 {grid}

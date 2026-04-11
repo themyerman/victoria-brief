@@ -2,12 +2,15 @@ from __future__ import annotations
 
 """
 Weather forecast for Victoria BC using Open-Meteo (no API key required).
+Also fetches sunrise/sunset from sunrise-sunset.org and AQHI from
+Environment Canada — all free, no API key needed.
 Uses only stdlib: urllib.request, json.
 """
 
 import json
 import sys
 import urllib.request
+from urllib.request import Request, urlopen
 
 _URL = (
     "https://api.open-meteo.com/v1/forecast"
@@ -91,3 +94,100 @@ def fetch_forecast() -> list[dict]:
     except Exception as exc:
         print(f"  [warn] Weather fetch failed: {exc}", file=sys.stderr)
         return []
+
+
+# ---------------------------------------------------------------------------
+# Sunrise / Sunset
+# ---------------------------------------------------------------------------
+
+_SUN_URL = (
+    "https://api.sunrise-sunset.org/json"
+    "?lat=48.4284&lng=-123.3656&tzid=America/Vancouver"
+)
+
+
+def fetch_sun() -> dict:
+    """
+    Returns dict with sunrise, sunset, day_length strings (local Victoria time).
+    Returns {} on any failure.
+    """
+    try:
+        req = Request(_SUN_URL, headers={"User-Agent": "victoria-brief/1.0"})
+        with urlopen(req, timeout=8) as resp:
+            data = json.loads(resp.read())
+        if data.get("status") != "OK":
+            return {}
+        r = data["results"]
+
+        def _fmt(t: str) -> str:
+            """'6:30:32 AM' → '6:30 AM'"""
+            parts = t.split(":")
+            return f"{parts[0]}:{parts[1]} {t.split()[-1]}" if len(parts) >= 2 else t
+
+        return {
+            "sunrise":    _fmt(r.get("sunrise", "")),
+            "sunset":     _fmt(r.get("sunset", "")),
+            "day_length": r.get("day_length", ""),
+        }
+    except Exception as exc:
+        print(f"  [warn] Sunrise/sunset fetch failed: {exc}", file=sys.stderr)
+        return {}
+
+
+# ---------------------------------------------------------------------------
+# Air Quality Index (AQHI) — Environment Canada
+# ---------------------------------------------------------------------------
+
+_AQHI_URL = (
+    "https://api.weather.gc.ca/collections/aqhi-observations-realtime/items"
+    "?f=json&limit=1&sortby=-observation_datetime&location_id=JBOBQ"
+)
+
+_AQHI_LABELS = [
+    (3,  "Low",       "🟢"),
+    (6,  "Moderate",  "🟡"),
+    (10, "High",      "🟠"),
+    (99, "Very High", "🔴"),
+]
+
+
+def _aqhi_label(value: float) -> tuple[str, str]:
+    for threshold, label, icon in _AQHI_LABELS:
+        if value <= threshold:
+            return label, icon
+    return "Very High", "🔴"
+
+
+def fetch_aqhi() -> dict:
+    """
+    Returns dict: value (float), label, icon, updated_text.
+    Returns {} on any failure.
+    """
+    try:
+        req = Request(_AQHI_URL, headers={
+            "User-Agent": "victoria-brief/1.0",
+            "Accept": "application/json",
+        })
+        with urlopen(req, timeout=8) as resp:
+            data = json.loads(resp.read())
+
+        features = data.get("features", [])
+        if not features:
+            return {}
+
+        props = features[0].get("properties", {})
+        value = props.get("aqhi")
+        if value is None:
+            return {}
+
+        value = round(float(value), 1)
+        label, icon = _aqhi_label(value)
+        return {
+            "value":        value,
+            "label":        label,
+            "icon":         icon,
+            "updated_text": props.get("observation_datetime_text_en", ""),
+        }
+    except Exception as exc:
+        print(f"  [warn] AQHI fetch failed: {exc}", file=sys.stderr)
+        return {}

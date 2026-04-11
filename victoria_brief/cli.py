@@ -9,7 +9,7 @@ from .config import load_config
 from .sources import fetch_all
 from .nlp import deduplicate, score_items, find_major_stories, fill_major_stories, summarize_item, sort_sources, top_keywords, extract_entities
 from .render import to_html
-from . import mailer, thumbnails, weather, photos
+from . import mailer, thumbnails, weather, photos, tides, ferries
 
 
 def main() -> None:
@@ -73,6 +73,14 @@ def main() -> None:
 
     print("Fetching weather...")
     forecast = weather.fetch_forecast()
+    sun = weather.fetch_sun()
+    aqhi = weather.fetch_aqhi()
+
+    print("Fetching tides...")
+    tide_list = tides.fetch_tides()
+
+    print("Fetching ferry status...")
+    ferry_routes = ferries.fetch_ferries()
 
     print("Fetching photos...")
     photo_list = photos.fetch_photos(n=4)
@@ -81,7 +89,20 @@ def main() -> None:
     keywords = top_keywords(processed)
     entities = extract_entities(processed)
 
-    html = to_html(processed, major_stories=major, top_n=3, categories=categories, forecast=forecast, keywords=keywords, entities=entities, photos=photo_list)
+    html = to_html(
+        processed,
+        major_stories=major,
+        top_n=3,
+        categories=categories,
+        forecast=forecast,
+        sun=sun,
+        aqhi=aqhi,
+        tides=tide_list,
+        ferries=ferry_routes,
+        keywords=keywords,
+        entities=entities,
+        photos=photo_list,
+    )
 
     if not html.strip():
         print("ERROR: render produced empty output.", file=sys.stderr)
