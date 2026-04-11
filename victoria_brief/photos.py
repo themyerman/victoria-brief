@@ -57,10 +57,11 @@ def _entry_to_dict(entry) -> dict:
 
 
 def _url_reachable(url: str) -> bool:
-    """Quick HEAD check to confirm the image actually loads."""
+    """GET-based check — Flickr CDN often blocks HEAD requests."""
     try:
         import requests
-        r = requests.head(url, timeout=4, allow_redirects=True)
+        r = requests.get(url, timeout=5, stream=True)
+        r.close()
         return r.status_code == 200
     except Exception:
         return False
@@ -68,10 +69,11 @@ def _url_reachable(url: str) -> bool:
 
 def fetch_photos(n: int = 4) -> list[dict]:
     """
-    Fetch n Victoria BC nature photos from Flickr, one from each of n
-    different randomly-chosen feeds for maximum visual variety.
-    Validates each image URL before including it so broken/private photos
-    don't appear. Returns a list of dicts with: url, title, author, link.
+    Fetch n Victoria BC nature photos from Flickr. Collects up to 2×n
+    candidates across all feeds first, then validates URLs (GET stream)
+    so broken/private photos are skipped. Falls back to unvalidated if
+    we can't reach n confirmed photos.
+    Returns a list of dicts with: url, title, author, link.
     """
     try:
         import feedparser
@@ -82,30 +84,40 @@ def fetch_photos(n: int = 4) -> list[dict]:
     feeds = _FEEDS.copy()
     random.shuffle(feeds)
 
-    photos = []
+    # Gather candidates from as many feeds as needed, one per feed for variety
+    candidates: list[dict] = []
     seen_urls: set[str] = set()
-
     for feed_url in feeds:
-        if len(photos) >= n:
+        if len(candidates) >= n * 2:
             break
         try:
             parsed = feedparser.parse(feed_url)
-            # Shuffle candidates so we don't always pick the same photo per feed
-            candidates = [
-                e for e in parsed.entries[:20]
-                if _image_url(e) and _image_url(e) not in seen_urls
-            ]
-            random.shuffle(candidates)
-            for entry in candidates:
+            entries = [e for e in parsed.entries[:20] if _image_url(e)]
+            random.shuffle(entries)
+            for entry in entries:
                 p = _entry_to_dict(entry)
-                if not p["url"] or p["url"] in seen_urls:
-                    continue
-                if not _url_reachable(p["url"]):
-                    continue
-                seen_urls.add(p["url"])
-                photos.append(p)
-                break
+                if p["url"] and p["url"] not in seen_urls:
+                    seen_urls.add(p["url"])
+                    candidates.append(p)
+                    break
         except Exception as exc:
             print(f"  [warn] Flickr feed failed: {exc}", file=sys.stderr)
 
-    return photos
+    # Validate URLs — skip broken/private images
+    photos: list[dict] = []
+    for p in candidates:
+        if len(photos) >= n:
+            break
+        if _url_reachable(p["url"]):
+            photos.append(p)
+
+    # If validation was too aggressive, fall back to unvalidated candidates
+    if len(photos) < n:
+        used = {p["url"] for p in photos}
+        for p in candidates:
+            if len(photos) >= n:
+                break
+            if p["url"] not in used:
+                photos.append(p)
+
+    return photos[:n]
