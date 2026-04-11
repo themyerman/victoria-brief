@@ -402,14 +402,14 @@ def to_html(
   .major-inner {{ display: flex; gap: 16px; align-items: stretch; }}
   .major-stories-col {{ flex: 1; min-width: 0; }}
   /* Photos panel */
-  .photos-panel {{ flex-shrink: 0; width: 280px; display: flex; flex-direction: column; gap: 8px; }}
+  .photos-panel {{ flex-shrink: 0; width: 420px; display: flex; flex-direction: column; gap: 8px; }}
   .photos-h2 {{ margin: 0 0 6px; font-size: 0.75em; text-transform: uppercase;
                 letter-spacing: 0.08em; color: #1a1a2e; }}
-  .pgrid {{ display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }}
-  .pgrid-cell {{ position: relative; overflow: hidden; border-radius: 5px; }}
-  .pgrid-img {{ width: 100%; height: 110px; object-fit: cover; display: block;
-                transition: transform 0.2s; }}
-  .pgrid-cell:hover .pgrid-img {{ transform: scale(1.04); }}
+  .pgrid {{ display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }}
+  .pgrid-cell {{ position: relative; overflow: hidden; border-radius: 6px; }}
+  .pgrid-img {{ width: 100%; height: 160px; object-fit: cover; display: block;
+                transition: transform 0.25s; }}
+  .pgrid-cell:hover .pgrid-img {{ transform: scale(1.05); }}
   .pgrid-credit {{ display: block; font-size: 0.65em; color: #999;
                    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
                    margin-top: 2px; }}
