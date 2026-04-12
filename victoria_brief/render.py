@@ -682,7 +682,7 @@ def _flat_grid(
     cards = []
     for name in sorted(sources.keys(), key=sort_key):
         cat = (categories or {}).get(name, "Other")
-        if cat in (_EVENTS_CATEGORY, _SPORTS_CATEGORY):
+        if cat in (_EVENTS_CATEGORY,):
             continue   # handled separately below the grid
         card = _source_card(name, sources[name], top_n, category=cat)
         if card:
