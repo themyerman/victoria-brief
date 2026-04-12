@@ -67,18 +67,22 @@ done
 [ $UPLOADED -eq 0 ] && fail "FTP failed after 3 attempts — brief saved locally only"
 
 # ── Notify ────────────────────────────────────────────────────────────────────
-step "Sending iMessages..."
-MSG="Good morning! Today's Victoria Brief is ready: https://myerman.art/victoria-brief/"
-for NUMBER in "+17202928866" "+17204591466"; do
-    osascript << APPLESCRIPT > /dev/null 2>&1
+if [ "${SKIP_SMS:-0}" = "1" ]; then
+    ok "iMessages skipped (SKIP_SMS=1)"
+else
+    step "Sending iMessages..."
+    MSG="Good morning! Today's Victoria Brief is ready: https://myerman.art/victoria-brief/"
+    for NUMBER in "+17202928866" "+17204591466"; do
+        osascript << APPLESCRIPT > /dev/null 2>&1
 tell application "Messages"
   set svc to 1st service whose service type is iMessage
   set buddy to participant "$NUMBER" of svc
   send "$MSG" to buddy
 end tell
 APPLESCRIPT
-done
-ok "iMessages sent"
+    done
+    ok "iMessages sent"
+fi
 
 # ── Done ──────────────────────────────────────────────────────────────────────
 echo ""
