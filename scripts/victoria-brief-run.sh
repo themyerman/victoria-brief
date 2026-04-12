@@ -6,12 +6,16 @@ BRIEF="$REPO/index.html"
 ENV="$HOME/.victoria-brief.env"
 PY="/Users/myerman/Library/Python/3.9/bin/victoria-brief"
 
-# ── Terminal formatting ───────────────────────────────────────────────────────
-BOLD=$(tput bold); RESET=$(tput sgr0)
-GREEN=$(tput setaf 2); YELLOW=$(tput setaf 3)
-RED=$(tput setaf 1); BLUE=$(tput setaf 4); DIM=$(tput dim)
+# ── Terminal formatting (graceful fallback if no $TERM) ───────────────────────
+if [ -n "$TERM" ] && tput bold 2>/dev/null; then
+  BOLD=$(tput bold); RESET=$(tput sgr0)
+  GREEN=$(tput setaf 2); YELLOW=$(tput setaf 3)
+  RED=$(tput setaf 1); BLUE=$(tput setaf 4); DIM=$(tput dim)
+else
+  BOLD=""; RESET=""; GREEN=""; YELLOW=""; RED=""; BLUE=""; DIM=""
+fi
 
-clear
+clear 2>/dev/null || true
 echo ""
 echo "  ${BOLD}☀️  Victoria Brief${RESET}"
 echo "  ${DIM}$(date '+%A, %B %-d at %-I:%M %p')${RESET}"
@@ -50,7 +54,7 @@ FTP_USER="ftp2@myerman.art:$FTP_PASS"
 UPLOADED=0
 for attempt in 1 2 3; do
     step "Uploading to myerman.art  (attempt $attempt/3)..."
-    if curl -s --ftp-ssl --insecure --no-sessionid -T "$BRIEF" "$FTP_URL" \
+    if curl -s --ftp-ssl --insecure -T "$BRIEF" "$FTP_URL" \
             --user "$FTP_USER" > /dev/null 2>&1; then
         ok "Published → myerman.art/victoria-brief/"
         UPLOADED=1
