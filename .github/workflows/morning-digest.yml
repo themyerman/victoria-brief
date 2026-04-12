@@ -8,6 +8,7 @@ on:
 
 permissions:
   contents: write
+  models: read
 
 jobs:
   build:
@@ -28,6 +29,8 @@ jobs:
         run: pip install .
 
       - name: Generate brief
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: victoria-brief --file index.html
 
       - name: Commit and push

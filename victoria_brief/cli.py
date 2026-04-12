@@ -9,7 +9,7 @@ from .config import load_config
 from .sources import fetch_all
 from .nlp import deduplicate, score_items, find_major_stories, fill_major_stories, summarize_item, sort_sources, extract_entities
 from .render import to_html
-from . import thumbnails, weather, photos, tides, ferries, wildfire, transit, whale, trails, bikecount, marine
+from . import thumbnails, weather, photos, tides, ferries, wildfire, transit, whale, trails, bikecount, marine, ai_summary
 
 
 def main() -> None:
@@ -89,6 +89,9 @@ def main() -> None:
     major = fill_major_stories(major, processed, fill_to=5)
     print(f"  {len(major)} major stories ({sum(1 for s in major if not s.get('promoted'))} cross-source, {sum(1 for s in major if s.get('promoted'))} promoted)")
 
+    print("Generating AI briefing...")
+    briefing = ai_summary.generate_briefing(major)
+
     print("Fetching thumbnails...")
     processed = thumbnails.enrich(processed, top_n=3)
     event_sources = thumbnails.enrich(event_sources, top_n=3)
@@ -133,6 +136,7 @@ def main() -> None:
     html = to_html(
         all_sources,
         major_stories=major,
+        ai_briefing=briefing,
         top_n=3,
         categories=categories,
         forecast=forecast,

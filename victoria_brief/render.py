@@ -65,9 +65,18 @@ def _photos_panel(photo_list: list) -> str:
 </div>"""
 
 
-def _major_stories_section(stories: list[dict], photo_list: Optional[list] = None) -> str:
+def _major_stories_section(
+    stories: list[dict],
+    photo_list: Optional[list] = None,
+    ai_briefing: str = "",
+) -> str:
     if not stories:
         return ""
+
+    briefing_html = (
+        f'<p class="ai-briefing">{ai_briefing}</p>'
+        if ai_briefing else ""
+    )
 
     items_html = []
     for s in stories:
@@ -97,6 +106,7 @@ def _major_stories_section(stories: list[dict], photo_list: Optional[list] = Non
   <div class="major-inner">
     <div class="major-stories-col">
       <h2 class="major-h2">&#9733; Major Stories</h2>
+      {briefing_html}
       <ul class="major-list">{"".join(items_html)}</ul>
     </div>
     {photos_html}
@@ -686,6 +696,7 @@ def _flat_grid(
 def to_html(
     sources: dict[str, list[dict]],
     major_stories: Optional[list[dict]] = None,
+    ai_briefing: str = "",
     top_n: int = 3,
     categories: Optional[dict[str, str]] = None,
     forecast: Optional[list] = None,
@@ -705,7 +716,7 @@ def to_html(
 ) -> str:
     today = datetime.now().strftime("%A, %B %-d, %Y")
 
-    major        = _major_stories_section(major_stories or [], photo_list=photos)
+    major        = _major_stories_section(major_stories or [], photo_list=photos, ai_briefing=ai_briefing)
     grid         = _flat_grid(sources, categories, top_n)
     events_html  = _events_section(sources, categories)
     weather_html = _weather_widget(forecast or [], sun=sun or {}, aqhi=aqhi or {})
@@ -786,6 +797,10 @@ def to_html(
   @media (max-width: 700px) {{ .photos-panel {{ display: none; }} }}
   .major-h2 {{ margin: 0 0 12px; font-size: 0.85em; text-transform: uppercase;
                letter-spacing: 0.06em; color: #8b0000; }}
+  .ai-briefing {{ font-size: 0.95em; line-height: 1.65; color: #222;
+                  margin: 0 0 14px; padding: 10px 14px;
+                  background: #fafafa; border-left: 3px solid #8b0000;
+                  border-radius: 0 4px 4px 0; }}
   .major-list {{ list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 10px; }}
   .major-item {{ display: flex; gap: 10px; align-items: flex-start; }}
   .major-text {{ flex: 1; }}
