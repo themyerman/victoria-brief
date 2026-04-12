@@ -79,7 +79,7 @@ Stories (use these exact URLs):
             json={
                 "model":      _MODEL,
                 "messages":   [{"role": "user", "content": prompt}],
-                "max_tokens": 180,
+                "max_tokens": 350,
                 "temperature": 0.6,
             },
             timeout=_TIMEOUT,
