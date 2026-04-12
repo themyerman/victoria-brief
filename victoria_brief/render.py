@@ -446,7 +446,7 @@ def _transit_section(transit: Optional[list]) -> str:
     )
 
 
-def _trails_section(trail_data: Optional[dict]) -> str:
+def _trails_section(trail_data: Optional[dict], bike_counts: Optional[dict] = None) -> str:
     if not trail_data:
         return ""
     featured = trail_data.get("featured", {})
@@ -463,6 +463,27 @@ def _trails_section(trail_data: Optional[dict]) -> str:
         )
     tf_url = trail_data.get("trailforks_url", "")
     tf_link = f' <a href="{tf_url}" target="_blank" class="crp-trail-link">Trailforks →</a>' if tf_url else ""
+
+    # Bike counter rows
+    count_html = ""
+    if bike_counts and bike_counts.get("counters"):
+        total = bike_counts.get("total_yesterday", 0)
+        dash  = bike_counts.get("dashboard_url", "")
+        rows  = ""
+        for c in bike_counts["counters"]:
+            pct  = c["vs_avg_pct"]
+            pct_str = f'{pct:+d}%' if pct else "≈ avg"
+            rows += (
+                f'<li>{c["trend"]} <strong>{c["name"]}</strong>'
+                f' — {c["last_day"]:,} yesterday'
+                f' <span class="crp-fire-meta">({pct_str} vs avg)</span></li>'
+            )
+        total_link = f'<a href="{dash}" target="_blank">{total:,} total</a>' if dash else f'{total:,} total'
+        count_html = (
+            f'<p class="crp-trail-counts-hdr">Yesterday: {total_link} trail users</p>'
+            f'<ul class="crp-list crp-trail-counts">{rows}</ul>'
+        )
+
     return (
         f'<div class="transport-section">'
         f'<h3 class="coastal-h3">&#128692; Trails &amp; Cycling</h3>'
@@ -470,6 +491,7 @@ def _trails_section(trail_data: Optional[dict]) -> str:
         f'<strong>{trail_data.get("condition","")} — {trail_data.get("label","")}</strong>'
         f'<span class="crp-transit-desc"> · {trail_data.get("note","")}</span></p>'
         f'{feat_html}'
+        f'{count_html}'
         f'<p class="coastal-src">Based on {trail_data.get("precip_24h",0)}mm rain last 24h{tf_link}</p>'
         f'</div>'
     )
@@ -487,10 +509,11 @@ def _coastal_strip(
     transit: Optional[list] = None,
     webcam_url: Optional[str] = None,
     trail_data: Optional[dict] = None,
+    bike_counts: Optional[dict] = None,
 ) -> str:
     ferries_html  = _ferries_widget(ferry_routes)
     transit_html  = _transit_section(transit)
-    trails_html   = _trails_section(trail_data)
+    trails_html   = _trails_section(trail_data, bike_counts)
     transport_inner = ferries_html + transit_html + trails_html
     transport_html = (
         f'<div class="coastal-panel transport-panel">{transport_inner}</div>'
@@ -681,6 +704,7 @@ def to_html(
     transit: Optional[list] = None,
     webcam_url: Optional[str] = None,
     trail_data: Optional[dict] = None,
+    bike_counts: Optional[dict] = None,
     entities: Optional[dict] = None,
     photos: Optional[list] = None,
 ) -> str:
@@ -696,6 +720,7 @@ def to_html(
         whales=whales, wildfire=wildfire,
         transit=transit, webcam_url=webcam_url,
         trail_data=trail_data,
+        bike_counts=bike_counts,
     )
     ner_html     = _ner_card(entities or {})
 
@@ -855,6 +880,9 @@ def to_html(
   .crp-trail-feat a:hover {{ color:#1a6b9a; text-decoration:underline; }}
   .crp-trail-link {{ font-size:0.85em; color:#1a6b9a; text-decoration:none; margin-left:4px; }}
   .crp-trail-link:hover {{ text-decoration:underline; }}
+  .crp-trail-counts-hdr {{ font-size:0.82em; margin:6px 0 4px; color:#333; font-weight:600; }}
+  .crp-trail-counts a {{ color:#1a6b9a; text-decoration:none; }}
+  .crp-trail-counts a:hover {{ text-decoration:underline; }}
   .crp-minigrid {{ display:grid; grid-template-columns:1fr 1fr; gap:0; }}
   .crp-mini {{ padding:10px 14px; border-top:1px solid #eee; }}
   .crp-mini:nth-child(even) {{ border-left:1px solid #eee; }}
