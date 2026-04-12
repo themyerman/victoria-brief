@@ -4,9 +4,6 @@
 # `name` is how the source appears as a section header in the digest.
 #
 
-notify:
-  - myerman@gmail.com
-
 
 # Optional `weight` (default 1.0) sets a baseline priority multiplier.
 # Sources are sorted dynamically each run by: weight × gravity_score,

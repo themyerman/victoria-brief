@@ -9,23 +9,18 @@ from .config import load_config
 from .sources import fetch_all
 from .nlp import deduplicate, score_items, find_major_stories, fill_major_stories, summarize_item, sort_sources, extract_entities
 from .render import to_html
-from . import mailer, thumbnails, weather, photos, tides, ferries, wildfire, transit, whale, trails, bikecount, marine
+from . import thumbnails, weather, photos, tides, ferries, wildfire, transit, whale, trails, bikecount, marine
 
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Victoria BC Morning Brief")
-    output = parser.add_mutually_exclusive_group(required=True)
-    output.add_argument(
-        "--email", action="store_true",
-        help="Send digest via SMTP (requires EMAIL_* env vars)",
-    )
-    output.add_argument(
+    parser.add_argument(
         "--file", metavar="PATH", nargs="?", const="~/Desktop",
-        help="Write digest to an HTML file (default: ~/Desktop/victoria-brief-YYYY-MM-DD.html)",
+        help="Write digest to an HTML file (default: ~/Desktop/victoria-daily-brief.html)",
     )
     args = parser.parse_args()
 
-    sources_config, notify_list, extra = load_config()
+    sources_config, _, extra = load_config()
     categories = extra.get("categories", {})
     source_weights = {s["name"]: s.get("weight", 1.0) for s in sources_config}
 
@@ -161,18 +156,8 @@ def main() -> None:
 
     today = datetime.now().strftime("%B %-d, %Y")
 
-    if args.email:
-        mailer.send(subject=f"Victoria Morning Brief — {today}", html=html)
-        print("Done.")
-    else:
-        dest = Path(args.file).expanduser()
-        if dest.is_dir():
-            dest = dest / "victoria-daily-brief.html"
-        dest.write_text(html, encoding="utf-8")
-        print(f"Saved: {dest}")
-
-    if notify_list:
-        try:
-            mailer.notify(notify_list)
-        except Exception as exc:
-            print(f"  [warn] Notification failed: {exc}", file=sys.stderr)
+    dest = Path(args.file or "~/Desktop").expanduser()
+    if dest.is_dir():
+        dest = dest / "victoria-daily-brief.html"
+    dest.write_text(html, encoding="utf-8")
+    print(f"Saved: {dest}")

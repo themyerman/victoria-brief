@@ -1,6 +1,5 @@
 feedparser>=6.0.11
-duckduckgo-search>=6.0.0
-yfinance>=0.2.38
+ddgs>=9.0.0
 pyyaml>=6.0
 nltk>=3.9
 scikit-learn>=1.4
