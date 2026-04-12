@@ -639,6 +639,12 @@ def _rugby_section(
             seen.add(link)
             unique.append(item)
 
+    _CA_WORDS = {
+        "canada", "canadian", "rugby canada", "bc bear", "ontario", "alberta",
+        "saskatchew", "manitoba", "nova scotia", "new brunswick", "newfoundland",
+        "cfl", "six nations", "americas rugby",
+    }
+
     rows = []
     for item in unique[:top_n]:
         title   = item.get("title", "")
@@ -648,10 +654,12 @@ def _rugby_section(
         anchor  = f'<a href="{link}" target="_blank">{title}</a>' if link else title
         age_html = f'<span class="age">{age}</span>' if age else ""
         snip_html = f'<span class="rugby-snip"> — {summary}</span>' if summary else ""
-        rows.append(f'<li>{anchor}{age_html}{snip_html}</li>')
+        haystack = (title + " " + summary).lower()
+        flag = " 🇨🇦" if any(w in haystack for w in _CA_WORDS) else ""
+        rows.append(f'<li>{anchor}{flag}{age_html}{snip_html}</li>')
 
     return f"""<section class="rugby-section">
-  <h2 class="rugby-h2">&#127951; Rugby</h2>
+  <h2 class="rugby-h2">&#127951; World Rugby</h2>
   <ul class="rugby-list">{"".join(rows)}</ul>
 </section>"""
 
