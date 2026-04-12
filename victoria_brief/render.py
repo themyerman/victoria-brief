@@ -660,12 +660,31 @@ def _sports_section(
 ) -> str:
     # Map source name keywords → sport emoji
     _SPORT_ICONS = {
-        "rugby":     "🏉",
-        "lacrosse":  "🥍",
-        "nll":       "🥍",
-        "aptn":      "🪶",
-        "indigenous":"🪶",
-        "cbc indigen":"🪶",
+        "rugby":    "🏉",
+        "lacrosse": "🥍",
+        "nll":      "🥍",
+        "aboriginal sport": "🪶",
+        "indigenous sport": "🪶",
+    }
+
+    # Keywords that confirm a story is actually about sport
+    _SPORT_WORDS = {
+        "rugby", "lacrosse", "game", "match", "tournament", "championship",
+        "league", "team", "player", "coach", "season", "score", "win", "loss",
+        "defeat", "victory", "athlete", "sport", "cup", "final", "semifinal",
+        "playoff", "roster", "draft", "signing", "transfer", "cap", "test",
+        "sevens", "nll", "box lacrosse", "field lacrosse", "stickball",
+        "snow snake", "canoe", "traditional game", "indigenous game",
+        "naig", "north american indigenous games",
+    }
+
+    # Keywords confirming Canadian connection
+    _CA_WORDS = {
+        "canada", "canadian", "bc", "british columbia", "ontario", "alberta",
+        "saskatchewan", "manitoba", "nova scotia", "québec", "quebec",
+        "toronto", "calgary", "edmonton", "vancouver", "victoria",
+        "nll", "cfl", "rugby canada", "lacrosse canada",
+        "first nation", "indigenous", "métis", "inuit", "aboriginal",
     }
 
     items_by_source: dict[str, list[dict]] = {}
@@ -676,11 +695,28 @@ def _sports_section(
     if not items_by_source:
         return ""
 
-    # Tag each item with its source name for icon lookup
+    # Tag each item with its source name, then filter
     all_items = []
     for src_name, src_items in items_by_source.items():
         for item in src_items:
+            haystack = (
+                (item.get("title", "") or "") + " " +
+                (item.get("summary", "") or "")
+            ).lower()
+
+            # Must mention at least one sport keyword
+            if not any(w in haystack for w in _SPORT_WORDS):
+                continue
+
+            # Must have a Canadian connection (feeds from non-CA sources like RugbyPass)
+            is_ca_source = any(kw in src_name.lower() for kw in ("canada", "nll", "aboriginal"))
+            if not is_ca_source and not any(w in haystack for w in _CA_WORDS):
+                continue
+
             all_items.append({**item, "_src_name": src_name})
+
+    if not all_items:
+        return ""
 
     seen: set[str] = set()
     unique = []
@@ -698,7 +734,6 @@ def _sports_section(
         age      = _rel_time(item.get("published"))
         src_name = item.get("_src_name", "").lower()
 
-        # Pick sport icon from source name
         icon = "🏅"
         for kw, ico in _SPORT_ICONS.items():
             if kw in src_name:
