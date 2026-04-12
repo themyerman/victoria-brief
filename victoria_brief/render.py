@@ -35,7 +35,6 @@ _CATEGORY_ORDER = [
     "Other",
 ]
 _EVENTS_CATEGORY = "Events"
-_SPORTS_CATEGORY = "Sports"
 
 
 # ---------------------------------------------------------------------------
@@ -652,106 +651,6 @@ def _events_section(
 # ---------------------------------------------------------------------------
 # Rugby section
 # ---------------------------------------------------------------------------
-
-def _sports_section(
-    sources: dict[str, list[dict]],
-    categories: Optional[dict[str, str]],
-    top_n: int = 10,
-) -> str:
-    # Map source name keywords → sport emoji
-    _SPORT_ICONS = {
-        "rugby":    "🏉",
-        "lacrosse": "🥍",
-        "nll":      "🥍",
-        "aboriginal sport": "🪶",
-        "indigenous sport": "🪶",
-    }
-
-    # Keywords that confirm a story is actually about sport
-    _SPORT_WORDS = {
-        "rugby", "lacrosse", "game", "match", "tournament", "championship",
-        "league", "team", "player", "coach", "season", "score", "win", "loss",
-        "defeat", "victory", "athlete", "sport", "cup", "final", "semifinal",
-        "playoff", "roster", "draft", "signing", "transfer", "cap", "test",
-        "sevens", "nll", "box lacrosse", "field lacrosse", "stickball",
-        "snow snake", "canoe", "traditional game", "indigenous game",
-        "naig", "north american indigenous games",
-    }
-
-    # Keywords confirming Canadian connection
-    _CA_WORDS = {
-        "canada", "canadian", "bc", "british columbia", "ontario", "alberta",
-        "saskatchewan", "manitoba", "nova scotia", "québec", "quebec",
-        "toronto", "calgary", "edmonton", "vancouver", "victoria",
-        "nll", "cfl", "rugby canada", "lacrosse canada",
-        "first nation", "indigenous", "métis", "inuit", "aboriginal",
-    }
-
-    items_by_source: dict[str, list[dict]] = {}
-    for name, source_items in sources.items():
-        if (categories or {}).get(name) == _SPORTS_CATEGORY:
-            items_by_source[name] = source_items
-
-    if not items_by_source:
-        return ""
-
-    # Tag each item with its source name, then filter
-    all_items = []
-    for src_name, src_items in items_by_source.items():
-        for item in src_items:
-            haystack = (
-                (item.get("title", "") or "") + " " +
-                (item.get("summary", "") or "")
-            ).lower()
-
-            # Must mention at least one sport keyword
-            if not any(w in haystack for w in _SPORT_WORDS):
-                continue
-
-            # Must have a Canadian connection (feeds from non-CA sources like RugbyPass)
-            is_ca_source = any(kw in src_name.lower() for kw in ("canada", "nll", "aboriginal"))
-            if not is_ca_source and not any(w in haystack for w in _CA_WORDS):
-                continue
-
-            all_items.append({**item, "_src_name": src_name})
-
-    if not all_items:
-        return ""
-
-    seen: set[str] = set()
-    unique = []
-    for item in sorted(all_items, key=lambda x: x.get("_score", 0), reverse=True):
-        link = item.get("link", "")
-        if link and link not in seen:
-            seen.add(link)
-            unique.append(item)
-
-    rows = []
-    for item in unique[:top_n]:
-        title    = item.get("title", "")
-        link     = item.get("link", "")
-        summary  = (item.get("summary", "") or "")[:140].strip()
-        age      = _rel_time(item.get("published"))
-        src_name = item.get("_src_name", "").lower()
-
-        icon = "🏅"
-        for kw, ico in _SPORT_ICONS.items():
-            if kw in src_name:
-                icon = ico
-                break
-
-        anchor    = f'<a href="{link}" target="_blank">{title}</a>' if link else title
-        age_html  = f'<span class="age">{age}</span>' if age else ""
-        snip_html = f'<span class="sports-snip"> — {summary}</span>' if summary else ""
-        rows.append(f'<li>{icon} {anchor}{age_html}{snip_html}</li>')
-
-    return f"""<section class="sports-section">
-  <h2 class="sports-h2">🏅 Sports</h2>
-  <ul class="sports-list">{"".join(rows)}</ul>
-</section>"""
-
-
-# ---------------------------------------------------------------------------
 # Full page
 # ---------------------------------------------------------------------------
 
@@ -809,7 +708,6 @@ def to_html(
     major        = _major_stories_section(major_stories or [], photo_list=photos)
     grid         = _flat_grid(sources, categories, top_n)
     events_html  = _events_section(sources, categories)
-    sports_html  = _sports_section(sources, categories)
     weather_html = _weather_widget(forecast or [], sun=sun or {}, aqhi=aqhi or {})
     coastal_html = _coastal_strip(
         tides or [], ferries or [],
@@ -1042,17 +940,6 @@ def to_html(
 
   @media (max-width:700px) {{ .coastal-strip {{ flex-direction:column; }} }}
 
-  /* Sports section */
-  .sports-section {{ background:#fff; border:1px solid #ddd; border-left:3px solid #b5651d;
-                     border-radius:7px; padding:14px 20px; margin-top:16px; }}
-  .sports-h2 {{ margin:0 0 10px; font-size:0.85em; text-transform:uppercase;
-                letter-spacing:0.06em; color:#b5651d; border-bottom:1px solid #eee;
-                padding-bottom:8px; }}
-  .sports-list {{ list-style:none; padding:0; margin:0; display:flex; flex-direction:column; gap:7px; }}
-  .sports-list li {{ font-size:0.87em; line-height:1.4; }}
-  .sports-list a {{ color:#1a1a2e; text-decoration:none; font-weight:600; }}
-  .sports-list a:hover {{ color:#b5651d; text-decoration:underline; }}
-  .sports-snip {{ color:#666; font-weight:400; }}
 </style>
 </head><body>
 
@@ -1066,7 +953,6 @@ def to_html(
 {coastal_html}
 {grid}
 {events_html}
-{sports_html}
 {ner_html}
 
 <p class="meta">Generated by victoria-brief.</p>
