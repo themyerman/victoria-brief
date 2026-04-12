@@ -631,6 +631,7 @@ def _events_section(
     sources: dict[str, list[dict]],
     categories: Optional[dict[str, str]],
     top_n: int = 12,
+    ai_events: str = "",
 ) -> str:
     """Pull all Events-category sources into a dedicated bottom section."""
     items = []
@@ -651,6 +652,15 @@ def _events_section(
             seen.add(link)
             unique.append(item)
 
+    if ai_events:
+        # AI paragraph with inline links — no card grid
+        briefing_html = f'<p class="ai-briefing">{_md_links_to_html(ai_events)}</p>'
+        return f"""<section class="events-section">
+  <h2 class="events-h2">&#128197; Events &amp; Community</h2>
+  {briefing_html}
+</section>"""
+
+    # Fallback: card grid
     cards = []
     for item in unique[:top_n]:
         title     = item.get("title", "")
@@ -729,6 +739,7 @@ def to_html(
     trail_data: Optional[dict] = None,
     bike_counts: Optional[dict] = None,
     marine_forecast: Optional[dict] = None,
+    ai_events: str = "",
     entities: Optional[dict] = None,
     photos: Optional[list] = None,
 ) -> str:
@@ -736,7 +747,7 @@ def to_html(
 
     major        = _major_stories_section(major_stories or [], photo_list=photos, ai_briefing=ai_briefing)
     grid         = _flat_grid(sources, categories, top_n)
-    events_html  = _events_section(sources, categories)
+    events_html  = _events_section(sources, categories, ai_events=ai_events)
     weather_html = _weather_widget(forecast or [], sun=sun or {}, aqhi=aqhi or {})
     coastal_html = _coastal_strip(
         tides or [], ferries or [],
