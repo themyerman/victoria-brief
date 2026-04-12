@@ -348,6 +348,7 @@ def _coastal_right_panel(
         summary  = marine_forecast.get("summary", "")
         wind     = marine_forecast.get("wind", "")
         period   = marine_forecast.get("period", "")
+        warnings = marine_forecast.get("warnings", [])
         src_url  = marine_forecast.get("source_url", "")
         issued   = marine_forecast.get("issued", "")
         issued_html  = f'<span class="crp-age"> · {issued}</span>' if issued else ""
@@ -356,11 +357,16 @@ def _coastal_right_panel(
         vis_html = (f'<p class="crp-marine-summary">{summary}</p>'
                     if summary and summary != wind else "")
         wind_html = f'<p class="crp-marine-wind">💨 {wind}</p>' if wind else ""
+        warn_html = (
+            "".join(f'<p class="crp-marine-warn">⚠️ {w}</p>' for w in warnings)
+            if warnings else ""
+        )
         src_link  = (f'<a href="{src_url}" target="_blank">EC Marine →</a>'
                      if src_url else "EC Marine")
         sections.append(
             f'<div class="crp-section">'
             f'<h4 class="crp-h4">⚓ Marine — {loc}{issued_html}</h4>'
+            f'{warn_html}'
             f'{period_html}'
             f'{vis_html}'
             f'{wind_html}'
@@ -914,6 +920,7 @@ def to_html(
   .crp-marine-period {{ font-size:0.72em; color:#999; margin:0 0 4px; font-style:italic; }}
   .crp-marine-summary {{ font-size:0.82em; color:#333; margin:0 0 4px; line-height:1.5; }}
   .crp-marine-wind {{ font-size:0.82em; color:#444; margin:4px 0 0; line-height:1.5; }}
+  .crp-marine-warn {{ font-size:0.82em; color:#b84; font-weight:600; margin:0 0 4px; }}
   .crp-transit-desc {{ font-size:0.78em; color:#666; }}
   .crp-trail-status {{ font-size:0.82em; margin:0 0 5px; }}
   .crp-trail-feat {{ font-size:0.82em; margin:4px 0 0; color:#333; }}
