@@ -90,6 +90,19 @@ sources:
     weight: 1.0
     category: "Arts & Culture"
 
+  # --- Rugby ---
+  - name: "Rugby — BBC Sport"
+    url: "https://feeds.bbci.co.uk/sport/0/rugby-union/rss.xml"
+    hours: 168
+    weight: 1.2
+    category: "Rugby"
+
+  - name: "Rugby — RugbyPass"
+    url: "https://www.rugbypass.com/feeds/rss/"
+    hours: 168
+    weight: 1.1
+    category: "Rugby"
+
   # Events: RSS feeds for real local event listings (7-day lookback — events post in advance)
   - name: "Victoria Buzz Events"
     url: "https://victoriabuzz.com/category/events/feed/"

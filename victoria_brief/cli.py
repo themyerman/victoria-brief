@@ -47,17 +47,18 @@ def main() -> None:
 
     processed = sort_sources(processed, source_weights, top_n=3)
 
-    # Pull Events-category sources out BEFORE the 6-card grid limit so they
-    # always flow through to the events section at the bottom of the page.
+    # Pull Events and Rugby sources out BEFORE the 6-card grid limit so they
+    # always flow through to their dedicated sections at the bottom of the page.
+    BYPASS_CATS = {"Events", "Rugby"}
     event_sources: dict[str, list[dict]] = {
         name: items
         for name, items in processed.items()
-        if categories.get(name) == "Events"
+        if categories.get(name) in BYPASS_CATS
     }
     processed = {
         name: items
         for name, items in processed.items()
-        if categories.get(name) != "Events"
+        if categories.get(name) not in BYPASS_CATS
     }
 
     # Limit grid to 6 named cards.

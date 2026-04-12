@@ -76,11 +76,18 @@ def _clean_title(text: str) -> str:
     return text
 
 
+_RSS_UA = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36"
+
+
 def fetch_rss(url: str, hours: int = 26) -> list[dict]:
     cutoff = datetime.now(timezone.utc) - timedelta(hours=hours)
     items = []
     try:
-        parsed = feedparser.parse(url, request_headers={"User-Agent": "victoria-brief/1.0"})
+        # Pre-fetch with requests using a browser UA so sites like BBC don't block us,
+        # then pass raw content to feedparser for parsing.
+        import requests as _req
+        resp = _req.get(url, headers={"User-Agent": _RSS_UA}, timeout=15)
+        parsed = feedparser.parse(resp.content)
         seen = set()
         for entry in parsed.entries:
             pub = entry.get("published_parsed") or entry.get("updated_parsed")
