@@ -692,6 +692,30 @@ def _events_section(
 # Full page
 # ---------------------------------------------------------------------------
 
+def _ai_news_grid(ai_categories: list[dict]) -> str:
+    """Render AI-generated topic sections with inline-linked summaries."""
+    if not ai_categories:
+        return ""
+
+    sections = []
+    for cat in ai_categories:
+        name    = cat.get("name", "")
+        icon    = cat.get("icon", "📰")
+        summary = cat.get("summary", "")
+        if not name or not summary:
+            continue
+        sections.append(
+            f'<section class="ai-cat-section">'
+            f'<h2 class="ai-cat-h2">{icon} {name}</h2>'
+            f'<p class="ai-briefing">{_md_links_to_html(summary)}</p>'
+            f'</section>'
+        )
+
+    if not sections:
+        return ""
+    return f'<div class="ai-grid">{"".join(sections)}</div>'
+
+
 def _flat_grid(
     sources: dict[str, list[dict]],
     categories: Optional[dict[str, str]],
@@ -740,13 +764,14 @@ def to_html(
     bike_counts: Optional[dict] = None,
     marine_forecast: Optional[dict] = None,
     ai_events: str = "",
+    ai_grid: list = [],
     entities: Optional[dict] = None,
     photos: Optional[list] = None,
 ) -> str:
     today = datetime.now().strftime("%A, %B %-d, %Y")
 
     major        = _major_stories_section(major_stories or [], photo_list=photos, ai_briefing=ai_briefing)
-    grid         = _flat_grid(sources, categories, top_n)
+    grid         = _ai_news_grid(ai_grid) if ai_grid else _flat_grid(sources, categories, top_n)
     events_html  = _events_section(sources, categories, ai_events=ai_events)
     weather_html = _weather_widget(forecast or [], sun=sun or {}, aqhi=aqhi or {})
     coastal_html = _coastal_strip(
@@ -832,6 +857,12 @@ def to_html(
                   border-radius: 0 4px 4px 0; }}
   .ai-link {{ color: #8b0000; font-weight: 600; text-decoration: none; }}
   .ai-link:hover {{ text-decoration: underline; }}
+  .ai-grid {{ display: flex; flex-direction: column; gap: 18px; margin: 0 0 24px; }}
+  .ai-cat-section {{ background: #fff; border: 1px solid #e0e0e0; border-radius: 6px; padding: 14px 16px; }}
+  .ai-cat-h2 {{ margin: 0 0 8px; font-size: 0.85em; text-transform: uppercase;
+                letter-spacing: 0.06em; color: #8b0000; }}
+  .ai-cat-section .ai-briefing {{ background: transparent; border-left: none;
+                                   padding: 0; border-radius: 0; }}
   .major-list {{ list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 10px; }}
   .major-item {{ display: flex; gap: 10px; align-items: flex-start; }}
   .major-text {{ flex: 1; }}

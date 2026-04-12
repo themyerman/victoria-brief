@@ -92,7 +92,7 @@ def main() -> None:
     print("Generating AI briefing...")
     briefing = ai_summary.generate_briefing(major)
 
-    # Collect event items for AI summary (same logic as render._events_section)
+    # Collect event items for AI summary
     event_items = [
         item
         for name, items in event_sources.items()
@@ -100,6 +100,9 @@ def main() -> None:
         if categories.get(name) == "Events"
     ]
     events_summary = ai_summary.generate_events_summary(event_items)
+
+    print("Generating AI news grid...")
+    ai_grid = ai_summary.generate_news_grid(processed, categories)
 
     print("Fetching thumbnails...")
     processed = thumbnails.enrich(processed, top_n=3)
@@ -147,6 +150,7 @@ def main() -> None:
         major_stories=major,
         ai_briefing=briefing,
         ai_events=events_summary,
+        ai_grid=ai_grid,
         top_n=3,
         categories=categories,
         forecast=forecast,

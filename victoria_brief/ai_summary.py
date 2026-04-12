@@ -84,6 +84,103 @@ Upcoming events (use these exact URLs):
         return ""
 
 
+def generate_news_grid(
+    sources: dict[str, list],
+    categories: dict[str, str],
+) -> list[dict]:
+    """
+    Takes all processed news sources, sends top stories to the AI, and gets
+    back a list of topic-grouped categories with inline-linked summaries.
+
+    Returns a list of dicts: {name, icon, summary}
+    Returns [] on failure or missing token.
+    """
+    token = os.environ.get("GITHUB_TOKEN", "")
+    if not token or not sources:
+        return []
+
+    today = datetime.now().strftime("%A, %B %-d, %Y")
+
+    # Collect top stories across all non-events sources, sorted by score
+    all_stories = []
+    for src_name, items in sources.items():
+        cat = categories.get(src_name, "Other")
+        for item in items[:3]:
+            title = item.get("title", "")
+            link  = item.get("link", "")
+            if title and link:
+                all_stories.append({
+                    "title":    title,
+                    "link":     link,
+                    "source":   src_name,
+                    "category": cat,
+                    "score":    item.get("_score", 0),
+                })
+
+    # Sort by score, cap at 50 to stay within token limits
+    all_stories.sort(key=lambda x: x["score"], reverse=True)
+    all_stories = all_stories[:50]
+
+    lines = []
+    for i, s in enumerate(all_stories, 1):
+        lines.append(f"{i}. [{s['title']}]({s['link']}) — {s['source']} ({s['category']})")
+    stories_text = "\n".join(lines)
+
+    # Seed with known category names so output matches our headers
+    known_cats = [
+        "BC News", "Victoria & Island", "Indigenous",
+        "Jobs & Economy", "Arts & Culture", "Education",
+        "Housing & Transit", "Other"
+    ]
+
+    prompt = f"""Today is {today}. You are organizing a morning news brief for Victoria, BC.
+
+Group these stories into news categories and write a 2-3 sentence summary for each category that has enough stories.
+
+Rules:
+- Use these category names where they fit: {', '.join(known_cats)}
+- You may create a new category name if stories clearly don't fit any above
+- Skip categories with fewer than 2 relevant stories
+- Every story you mention in a summary MUST use an inline markdown link: [words](url)
+- Link natural phrases mid-sentence — NOT "read more" or "click here" at end
+- Deduplicate: if two stories cover the same event, mention it once
+- Be concise and direct — no fluff
+
+Respond with valid JSON only, in this exact format:
+{{
+  "categories": [
+    {{"name": "Victoria & Island", "icon": "🏙️", "summary": "...inline [linked text](url) here..."}},
+    {{"name": "BC News", "icon": "🏔️", "summary": "..."}}
+  ]
+}}
+
+Stories:
+{stories_text}"""
+
+    try:
+        r = requests.post(
+            _API_URL,
+            headers={
+                "Authorization": f"Bearer {token}",
+                "Content-Type":  "application/json",
+            },
+            json={
+                "model":           _MODEL,
+                "messages":        [{"role": "user", "content": prompt}],
+                "max_tokens":      1200,
+                "temperature":     0.4,
+                "response_format": {"type": "json_object"},
+            },
+            timeout=30,
+        )
+        r.raise_for_status()
+        data = json.loads(r.json()["choices"][0]["message"]["content"])
+        return data.get("categories", [])
+    except Exception as exc:
+        print(f"  [warn] AI news grid failed: {exc}", file=sys.stderr)
+        return []
+
+
 def generate_briefing(stories: list[dict]) -> str:
     """
     Given a list of major story dicts (title, summary, sources),
