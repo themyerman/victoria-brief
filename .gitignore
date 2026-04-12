@@ -1,2 +1,6 @@
 *.pyc
 __pycache__/
+victoria_brief.egg-info/
+.DS_Store
+*.env
+.env*

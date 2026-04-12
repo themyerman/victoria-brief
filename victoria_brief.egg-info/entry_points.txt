@@ -1,2 +1,0 @@
-[console_scripts]
-victoria-brief = victoria_brief.cli:main

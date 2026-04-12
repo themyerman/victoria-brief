@@ -3,7 +3,6 @@
 
 REPO="/Users/myerman/Desktop/code/victoria-brief"
 BRIEF="$REPO/index.html"
-ENV="$HOME/.victoria-brief.env"
 PY="/Users/myerman/Library/Python/3.9/bin/victoria-brief"
 
 # ── Terminal formatting (graceful fallback if no $TERM) ───────────────────────
@@ -27,10 +26,6 @@ ok()    { echo "  ${GREEN}✓${RESET}  ${BOLD}$1${RESET}"; }
 warn()  { echo "  ${YELLOW}⚠${RESET}  $1"; }
 fail()  { echo "  ${RED}✗${RESET}  ${BOLD}$1${RESET}"; echo ""; exit 1; }
 
-# ── Load credentials ──────────────────────────────────────────────────────────
-[ -f "$ENV" ] && source "$ENV"
-[ -z "$FTP_PASS" ] && fail "Missing credentials ($ENV not found)"
-
 # ── Network ───────────────────────────────────────────────────────────────────
 step "Checking network..."
 if ! curl -sf --max-time 6 https://google.com > /dev/null 2>&1; then
@@ -48,28 +43,27 @@ else
     fail "Brief generation failed"
 fi
 
-# ── Upload ────────────────────────────────────────────────────────────────────
-FTP_URL="ftp://ftp.myerman.art/public_html/victoria-brief/index.html"
-FTP_USER="ftp2@myerman.art:$FTP_PASS"
-UPLOADED=0
-for attempt in 1 2 3; do
-    step "Uploading to myerman.art  (attempt $attempt/3)..."
-    if curl -s --ftp-ssl --insecure -T "$BRIEF" "$FTP_URL" \
-            --user "$FTP_USER" > /dev/null 2>&1; then
-        ok "Published → myerman.art/victoria-brief/"
-        UPLOADED=1
-        break
+# ── Publish via git push → GitHub Pages ──────────────────────────────────────
+step "Publishing to GitHub Pages..."
+cd "$REPO"
+git add index.html
+if git diff --staged --quiet; then
+    ok "No changes — already up to date"
+else
+    git commit -m "brief: $(date '+%Y-%m-%d')" > /dev/null 2>&1
+    if git push origin main > /tmp/vb-push.log 2>&1; then
+        ok "Published → themyerman.github.io/victoria-brief/"
+    else
+        warn "Push output:"
+        tail -3 /tmp/vb-push.log | sed 's/^/     /'
+        fail "Git push failed"
     fi
-    warn "Upload attempt $attempt failed"
-    [ $attempt -lt 3 ] && sleep 20
-done
-
-[ $UPLOADED -eq 0 ] && fail "FTP failed after 3 attempts — brief saved locally only"
+fi
 
 # ── Done ──────────────────────────────────────────────────────────────────────
 echo ""
 echo "  ──────────────────────────────────"
-echo "  ${GREEN}${BOLD}  All done!${RESET}  myerman.art/victoria-brief/"
+echo "  ${GREEN}${BOLD}  All done!${RESET}  themyerman.github.io/victoria-brief/"
 echo ""
 echo "  ${DIM}Closing in 12 seconds...${RESET}"
 sleep 12
