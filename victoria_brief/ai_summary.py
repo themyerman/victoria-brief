@@ -57,16 +57,17 @@ def generate_briefing(stories: list[dict]) -> str:
 
     stories_text = "\n".join(lines)
 
-    prompt = f"""Today is {today}. You are writing a morning news brief for someone who lives in Victoria, BC, Canada.
+    prompt = f"""Today is {today}. Write a 2-3 sentence morning news paragraph for someone in Victoria, BC.
 
-Based on these top stories from today's news, write a single paragraph of 2-3 conversational sentences summarizing what's happening. Be warm and direct — like a friend telling you what's in the news over coffee. Don't list the stories one by one; weave them together naturally.
+Rules:
+- Every story you mention MUST be hyperlinked using markdown: [words](url)
+- Link natural phrases mid-sentence — NOT "click here" or "read more" at the end
+- Example of correct style: "The city is moving forward with [new zoning changes](https://example.com) while [BC Ferries warns of delays](https://example.com) this weekend."
+- Weave the stories together naturally, do not list them
+- Write only the paragraph, nothing else
 
-When you reference a specific story, use a markdown link: [linked text](url). Use the URLs provided. Link the most natural phrase — not the full headline, just the key words.
-
-Today's top stories:
-{stories_text}
-
-Write only the paragraph, no preamble, using markdown links."""
+Stories (use these exact URLs):
+{stories_text}"""
 
     try:
         r = requests.post(
