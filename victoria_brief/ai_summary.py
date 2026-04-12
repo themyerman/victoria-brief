@@ -39,17 +39,20 @@ def generate_briefing(stories: list[dict]) -> str:
 
     today = datetime.now().strftime("%A, %B %-d, %Y")
 
-    # Build a compact story list for the prompt
+    # Build a compact story list for the prompt, including URLs for inline linking
     lines = []
     for i, s in enumerate(stories[:5], 1):
         title   = s.get("title", "")
+        link    = s.get("link", "")
         sources = ", ".join(s.get("sources", []))
         snippet = (s.get("summary", "") or "")[:100].strip()
         line = f"{i}. {title}"
+        if link:
+            line += f" — {link}"
         if sources:
             line += f" ({sources})"
         if snippet:
-            line += f" — {snippet}"
+            line += f" | {snippet}"
         lines.append(line)
 
     stories_text = "\n".join(lines)
@@ -58,10 +61,12 @@ def generate_briefing(stories: list[dict]) -> str:
 
 Based on these top stories from today's news, write a single paragraph of 2-3 conversational sentences summarizing what's happening. Be warm and direct — like a friend telling you what's in the news over coffee. Don't list the stories one by one; weave them together naturally.
 
+When you reference a specific story, use a markdown link: [linked text](url). Use the URLs provided. Link the most natural phrase — not the full headline, just the key words.
+
 Today's top stories:
 {stories_text}
 
-Write only the paragraph, no preamble."""
+Write only the paragraph, no preamble, using markdown links."""
 
     try:
         r = requests.post(

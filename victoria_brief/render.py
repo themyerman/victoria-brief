@@ -65,6 +65,16 @@ def _photos_panel(photo_list: list) -> str:
 </div>"""
 
 
+def _md_links_to_html(text: str) -> str:
+    """Convert markdown [text](url) links to HTML anchor tags."""
+    import re
+    return re.sub(
+        r'\[([^\]]+)\]\((https?://[^\)]+)\)',
+        r'<a href="\2" target="_blank" class="ai-link">\1</a>',
+        text,
+    )
+
+
 def _major_stories_section(
     stories: list[dict],
     photo_list: Optional[list] = None,
@@ -73,11 +83,22 @@ def _major_stories_section(
     if not stories:
         return ""
 
-    briefing_html = (
-        f'<p class="ai-briefing">{ai_briefing}</p>'
-        if ai_briefing else ""
-    )
+    photos_html = _photos_panel(photo_list or [])
 
+    if ai_briefing:
+        # Show only the AI paragraph with inline links — no headline list
+        briefing_html = f'<p class="ai-briefing">{_md_links_to_html(ai_briefing)}</p>'
+        return f"""<section class="major-section">
+  <div class="major-inner">
+    <div class="major-stories-col">
+      <h2 class="major-h2">&#9733; Major Stories</h2>
+      {briefing_html}
+    </div>
+    {photos_html}
+  </div>
+</section>"""
+
+    # Fallback: no AI briefing — show the headline list as before
     items_html = []
     for s in stories:
         title = s.get("title", "")
@@ -100,13 +121,10 @@ def _major_stories_section(
   </div>
 </li>""")
 
-    photos_html = _photos_panel(photo_list or [])
-
     return f"""<section class="major-section">
   <div class="major-inner">
     <div class="major-stories-col">
       <h2 class="major-h2">&#9733; Major Stories</h2>
-      {briefing_html}
       <ul class="major-list">{"".join(items_html)}</ul>
     </div>
     {photos_html}
@@ -798,9 +816,11 @@ def to_html(
   .major-h2 {{ margin: 0 0 12px; font-size: 0.85em; text-transform: uppercase;
                letter-spacing: 0.06em; color: #8b0000; }}
   .ai-briefing {{ font-size: 0.95em; line-height: 1.65; color: #222;
-                  margin: 0 0 14px; padding: 10px 14px;
+                  margin: 0; padding: 10px 14px;
                   background: #fafafa; border-left: 3px solid #8b0000;
                   border-radius: 0 4px 4px 0; }}
+  .ai-link {{ color: #8b0000; font-weight: 600; text-decoration: none; }}
+  .ai-link:hover {{ text-decoration: underline; }}
   .major-list {{ list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 10px; }}
   .major-item {{ display: flex; gap: 10px; align-items: flex-start; }}
   .major-text {{ flex: 1; }}
