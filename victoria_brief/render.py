@@ -291,6 +291,7 @@ def _coastal_right_panel(
     whales: Optional[list] = None,
     wildfire: Optional[dict] = None,
     webcam_url: Optional[str] = None,
+    marine_forecast: Optional[dict] = None,
 ) -> str:
     sections = []
 
@@ -338,6 +339,32 @@ def _coastal_right_panel(
             f'<div class="crp-section">'
             f'<h4 class="crp-h4">🐋 Whale Sightings</h4>'
             f'<ul class="crp-list">{items}</ul>'
+            f'</div>'
+        )
+
+    # ── Marine Forecast ───────────────────────────────────────────────────────
+    if marine_forecast:
+        loc      = marine_forecast.get("location", "Juan de Fuca Strait")
+        summary  = marine_forecast.get("summary", "")
+        wind     = marine_forecast.get("wind", "")
+        period   = marine_forecast.get("period", "")
+        src_url  = marine_forecast.get("source_url", "")
+        issued   = marine_forecast.get("issued", "")
+        issued_html  = f'<span class="crp-age"> · {issued}</span>' if issued else ""
+        period_html  = f'<p class="crp-marine-period">{period}</p>' if period else ""
+        # Show visibility/wave summary if it differs from wind text
+        vis_html = (f'<p class="crp-marine-summary">{summary}</p>'
+                    if summary and summary != wind else "")
+        wind_html = f'<p class="crp-marine-wind">💨 {wind}</p>' if wind else ""
+        src_link  = (f'<a href="{src_url}" target="_blank">EC Marine →</a>'
+                     if src_url else "EC Marine")
+        sections.append(
+            f'<div class="crp-section">'
+            f'<h4 class="crp-h4">⚓ Marine — {loc}{issued_html}</h4>'
+            f'{period_html}'
+            f'{vis_html}'
+            f'{wind_html}'
+            f'<p class="coastal-src">Source: {src_link}</p>'
             f'</div>'
         )
 
@@ -510,6 +537,7 @@ def _coastal_strip(
     webcam_url: Optional[str] = None,
     trail_data: Optional[dict] = None,
     bike_counts: Optional[dict] = None,
+    marine_forecast: Optional[dict] = None,
 ) -> str:
     ferries_html  = _ferries_widget(ferry_routes)
     transit_html  = _transit_section(transit)
@@ -519,7 +547,7 @@ def _coastal_strip(
         f'<div class="coastal-panel transport-panel">{transport_inner}</div>'
         if transport_inner else ""
     )
-    right_html = _coastal_right_panel(tides, whales, wildfire, webcam_url)
+    right_html = _coastal_right_panel(tides, whales, wildfire, webcam_url, marine_forecast)
     if not transport_html and not right_html:
         return ""
     return f'<div class="coastal-strip">{transport_html}{right_html}</div>'
@@ -659,7 +687,7 @@ def _rugby_section(
         rows.append(f'<li>{anchor}{flag}{age_html}{snip_html}</li>')
 
     return f"""<section class="rugby-section">
-  <h2 class="rugby-h2">&#127951; World Rugby</h2>
+  <h2 class="rugby-h2">&#127945; World Rugby</h2>
   <ul class="rugby-list">{"".join(rows)}</ul>
 </section>"""
 
@@ -713,6 +741,7 @@ def to_html(
     webcam_url: Optional[str] = None,
     trail_data: Optional[dict] = None,
     bike_counts: Optional[dict] = None,
+    marine_forecast: Optional[dict] = None,
     entities: Optional[dict] = None,
     photos: Optional[list] = None,
 ) -> str:
@@ -729,6 +758,7 @@ def to_html(
         transit=transit, webcam_url=webcam_url,
         trail_data=trail_data,
         bike_counts=bike_counts,
+        marine_forecast=marine_forecast,
     )
     ner_html     = _ner_card(entities or {})
 
@@ -881,6 +911,9 @@ def to_html(
   .crp-ok {{ font-size:0.82em; color:#2d6a4f; margin:0; }}
   .crp-fire-count {{ font-size:0.82em; margin:0 0 6px; color:#333; }}
   .crp-fire-meta {{ font-size:0.78em; color:#888; margin-left:4px; }}
+  .crp-marine-period {{ font-size:0.72em; color:#999; margin:0 0 4px; font-style:italic; }}
+  .crp-marine-summary {{ font-size:0.82em; color:#333; margin:0 0 4px; line-height:1.5; }}
+  .crp-marine-wind {{ font-size:0.82em; color:#444; margin:4px 0 0; line-height:1.5; }}
   .crp-transit-desc {{ font-size:0.78em; color:#666; }}
   .crp-trail-status {{ font-size:0.82em; margin:0 0 5px; }}
   .crp-trail-feat {{ font-size:0.82em; margin:4px 0 0; color:#333; }}

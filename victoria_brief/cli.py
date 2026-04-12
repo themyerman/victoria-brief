@@ -9,7 +9,7 @@ from .config import load_config
 from .sources import fetch_all
 from .nlp import deduplicate, score_items, find_major_stories, fill_major_stories, summarize_item, sort_sources, extract_entities
 from .render import to_html
-from . import mailer, thumbnails, weather, photos, tides, ferries, wildfire, transit, whale, trails, bikecount
+from . import mailer, thumbnails, weather, photos, tides, ferries, wildfire, transit, whale, trails, bikecount, marine
 
 
 def main() -> None:
@@ -124,6 +124,9 @@ def main() -> None:
     print("Fetching bike/pedestrian counts...")
     bike_counts = bikecount.fetch_bike_counts()
 
+    print("Fetching marine forecast...")
+    marine_forecast = marine.fetch_marine_forecast()
+
     print("Fetching photos...")
     photo_list = photos.fetch_photos(n=4)
 
@@ -147,6 +150,7 @@ def main() -> None:
         transit=transit_alerts,
         trail_data=trail_data,
         bike_counts=bike_counts,
+        marine_forecast=marine_forecast,
         entities=entities,
         photos=photo_list,
     )

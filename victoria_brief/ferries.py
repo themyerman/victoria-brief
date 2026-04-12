@@ -30,10 +30,6 @@ _WANTED = {("SWB", "TSA"), ("TSA", "SWB")}
 
 def _fill_label(pct: int) -> str:
     """Human-readable fill label."""
-    if pct == 0:
-        return "Empty"
-    if pct < 25:
-        return f"{pct}%"
     return f"{pct}%"
 
 
@@ -72,11 +68,12 @@ def fetch_ferries() -> list[dict]:
                 continue
 
             sailings_raw = route.get("sailings", [])
-            # Keep current sailing + up to 3 future ones
-            upcoming = [
-                s for s in sailings_raw
-                if s.get("sailingStatus") in ("current", "future")
-            ][:4]
+            # Keep at most ONE current sailing + up to 3 future ones.
+            # (The API sometimes marks multiple sailings as "current"; we
+            #  only want the actively-boarding/sailing ferry to get a NOW badge.)
+            current_ones = [s for s in sailings_raw if s.get("sailingStatus") == "current"]
+            future_ones  = [s for s in sailings_raw if s.get("sailingStatus") == "future"]
+            upcoming     = (current_ones[:1] + future_ones)[:4]
 
             sailings = []
             for s in upcoming:
