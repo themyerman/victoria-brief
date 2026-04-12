@@ -49,7 +49,7 @@ def main() -> None:
 
     # Pull Events and Rugby sources out BEFORE the 6-card grid limit so they
     # always flow through to their dedicated sections at the bottom of the page.
-    BYPASS_CATS = {"Events", "Rugby"}
+    BYPASS_CATS = {"Events", "Sports"}
     event_sources: dict[str, list[dict]] = {
         name: items
         for name, items in processed.items()
