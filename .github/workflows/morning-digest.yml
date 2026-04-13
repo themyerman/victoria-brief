@@ -69,9 +69,12 @@ jobs:
     name: Email Notification
     runs-on: ubuntu-latest
     timeout-minutes: 5
+    needs: build
     if: |
-      github.event.schedule == '0 15 * * *' ||
-      (github.event_name == 'workflow_dispatch' && inputs.send_email == true)
+      always() && (
+        github.event.schedule == '0 15 * * *' ||
+        (github.event_name == 'workflow_dispatch' && inputs.send_email == true)
+      )
 
     steps:
       - name: Send email
