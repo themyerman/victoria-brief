@@ -141,6 +141,7 @@ Rules:
 - Use these category names where they fit: {', '.join(known_cats)}
 - You may create a new category if stories clearly don't fit any above
 - Include all categories that have at least 1 story
+- Include as many stories per category as you have — do not limit to 2
 - Deduplicate: if two stories cover the same event, keep only the best one
 - Keep headlines concise (under 12 words) — rewrite if needed, but keep meaning
 - You MUST copy the url field exactly as provided — do not alter or omit it

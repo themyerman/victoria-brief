@@ -701,7 +701,7 @@ def _ai_news_grid(ai_categories: list[dict]) -> str:
         return ""
 
     sections = []
-    for i, cat in enumerate(ai_categories):
+    for cat in ai_categories:
         name    = cat.get("name", "")
         icon    = cat.get("icon", "📰")
         stories = cat.get("stories", [])
@@ -714,16 +714,19 @@ def _ai_news_grid(ai_categories: list[dict]) -> str:
             if not headline:
                 continue
             if url:
-                items.append(f'<li><a href="{url}" target="_blank" class="ai-link">{headline}</a></li>')
+                items.append(
+                    f'<li class="ai-story-item">'
+                    f'<a href="{url}" target="_blank" class="ai-story-link">{headline}</a>'
+                    f'</li>'
+                )
             else:
-                items.append(f'<li>{headline}</li>')
+                items.append(f'<li class="ai-story-item ai-story-nolink">{headline}</li>')
         if not items:
             continue
-        divider = '<hr class="ai-divider">' if i > 0 else ""
         sections.append(
-            f'{divider}'
             f'<div class="ai-cat-section">'
-            f'<h3 class="ai-cat-h3">{icon} {name}</h3>'
+            f'<div class="ai-cat-header"><span class="ai-cat-icon">{icon}</span>'
+            f'<h3 class="ai-cat-h3">{name}</h3></div>'
             f'<ul class="ai-story-list">{"".join(items)}</ul>'
             f'</div>'
         )
@@ -733,7 +736,7 @@ def _ai_news_grid(ai_categories: list[dict]) -> str:
     return (
         f'<div class="ai-grid-card">'
         f'<h2 class="ai-grid-title">📰 Today\'s News &amp; Events</h2>'
-        f'{"".join(sections)}'
+        f'<div class="ai-cat-grid">{"".join(sections)}</div>'
         f'</div>'
     )
 
@@ -882,21 +885,23 @@ def to_html(
   .ai-link:hover {{ text-decoration: underline; }}
   .ai-grid-card {{ background: #fff; border: 1px solid #e0e0e0; border-radius: 8px;
                    padding: 18px 20px; margin: 0 0 20px; }}
-  .ai-grid-title {{ margin: 0 0 14px; font-size: 0.85em; text-transform: uppercase;
-                    letter-spacing: 0.06em; color: #555; }}
-  .ai-cat-section {{ padding: 12px 0 0; }}
-  .ai-cat-h3 {{ margin: 0 0 6px; font-size: 0.8em; text-transform: uppercase;
-                letter-spacing: 0.06em; color: #8b0000; font-weight: 700; }}
-  .ai-divider {{ border: none; border-top: 1px solid #f0f0f0; margin: 4px 0 0; }}
-  .ai-grid-card .ai-briefing {{ background: transparent; border-left: none;
-                                 padding: 0; border-radius: 0; }}
+  .ai-grid-title {{ margin: 0 0 14px; font-size: 0.75em; text-transform: uppercase;
+                    letter-spacing: 0.08em; color: #888; font-weight: 600; }}
+  .ai-cat-grid {{ display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+                  gap: 0; }}
+  .ai-cat-section {{ padding: 12px 16px 14px; border-top: 1px solid #f2f2f2; }}
+  .ai-cat-section:nth-child(odd) {{ border-right: 1px solid #f2f2f2; }}
+  @media (max-width: 700px) {{ .ai-cat-section:nth-child(odd) {{ border-right: none; }} }}
+  .ai-cat-header {{ display: flex; align-items: center; gap: 6px; margin-bottom: 8px; }}
+  .ai-cat-icon {{ font-size: 1em; }}
+  .ai-cat-h3 {{ margin: 0; font-size: 0.75em; text-transform: uppercase;
+                letter-spacing: 0.07em; color: #8b0000; font-weight: 700; }}
   .ai-story-list {{ list-style: none; padding: 0; margin: 0;
-                    display: flex; flex-direction: column; gap: 5px; }}
-  .ai-story-list li {{ font-size: 0.9em; line-height: 1.4; padding-left: 10px;
-                       border-left: 2px solid #e8e8e8; }}
-  .ai-story-list li:hover {{ border-left-color: #8b0000; }}
-  .ai-story-list .ai-link {{ color: #1a1a2e; text-decoration: none; font-weight: 500; }}
-  .ai-story-list .ai-link:hover {{ color: #8b0000; text-decoration: underline; }}
+                    display: flex; flex-direction: column; gap: 7px; }}
+  .ai-story-item {{ font-size: 0.88em; line-height: 1.35; }}
+  .ai-story-link {{ color: #1a1a2e; text-decoration: none; font-weight: 500; }}
+  .ai-story-link:hover {{ color: #8b0000; text-decoration: underline; }}
+  .ai-story-nolink {{ color: #555; }}
   .major-list {{ list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 10px; }}
   .major-item {{ display: flex; gap: 10px; align-items: flex-start; }}
   .major-text {{ flex: 1; }}
