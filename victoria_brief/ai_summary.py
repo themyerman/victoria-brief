@@ -123,7 +123,7 @@ def generate_news_grid(
 
     lines = []
     for i, s in enumerate(all_stories, 1):
-        lines.append(f"{i}. [{s['title']}]({s['link']}) — {s['source']} ({s['category']})")
+        lines.append(f"{i}. {s['title']} | url: {s['link']} | source: {s['source']} | category: {s['category']}")
     stories_text = "\n".join(lines)
 
     # Seed with known category names so output matches our headers
@@ -135,31 +135,32 @@ def generate_news_grid(
 
     prompt = f"""Today is {today}. You are organizing a morning news brief for Victoria, BC.
 
-Group these stories into news categories and write a 2-3 sentence summary for each category.
+Group these stories into categories. For each category return the relevant stories as objects with a short headline and the exact URL from the input.
 
-STRICT RULES — follow exactly:
-1. Use these category names where they fit: {', '.join(known_cats)}
-2. You may create a new category name if stories clearly don't fit any above
-3. Include every category that has at least 1 story — do not skip thin categories
-4. Write 2-4 sentences per category — more stories = more sentences, be thorough
-5. EVERY story you mention MUST be linked inline using markdown: [words](url)
-   - Link natural phrases mid-sentence, NOT "read more" or "click here" at the end
-   - EXAMPLE of correct output: "The [Downtown cycling plan](https://url) is moving to council while a [new affordable housing project](https://url) breaks ground in Langford."
-   - EXAMPLE of wrong output: "The cycling plan is moving to council. [Read more](https://url)"
-   - If a sentence has no inline link, it is WRONG — rewrite it
-5. Deduplicate: if two stories cover the same event, mention it once with one link
-6. Be concise and factual — no filler phrases
+Rules:
+- Use these category names where they fit: {', '.join(known_cats)}
+- You may create a new category if stories clearly don't fit any above
+- Include all categories that have at least 1 story
+- Deduplicate: if two stories cover the same event, keep only the best one
+- Keep headlines concise (under 12 words) — rewrite if needed, but keep meaning
+- You MUST copy the url field exactly as provided — do not alter or omit it
+- Pick a relevant emoji icon for each category
 
 Respond with valid JSON only, exactly this format:
 {{
   "categories": [
-    {{"name": "Victoria & Island", "icon": "🏙️", "summary": "The [Downtown cycling plan](https://url) moves to council while [new housing](https://url) breaks ground in Langford."}},
-    {{"name": "Events & Community", "icon": "📅", "summary": "..."}},
-    {{"name": "BC News", "icon": "🏔️", "summary": "..."}}
+    {{
+      "name": "Victoria & Island",
+      "icon": "🏙️",
+      "stories": [
+        {{"headline": "Lawn bowling clubs open greens to public", "url": "https://..."}},
+        {{"headline": "VicPD launches community policing survey", "url": "https://..."}}
+      ]
+    }}
   ]
 }}
 
-Stories (these are your ONLY source material — use the exact URLs provided):
+Stories:
 {stories_text}"""
 
     try:
@@ -173,7 +174,7 @@ Stories (these are your ONLY source material — use the exact URLs provided):
                 "model":           _MODEL,
                 "messages":        [{"role": "user", "content": prompt}],
                 "max_tokens":      2000,
-                "temperature":     0.4,
+                "temperature":     0.3,
                 "response_format": {"type": "json_object"},
             },
             timeout=30,

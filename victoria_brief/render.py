@@ -704,15 +704,27 @@ def _ai_news_grid(ai_categories: list[dict]) -> str:
     for i, cat in enumerate(ai_categories):
         name    = cat.get("name", "")
         icon    = cat.get("icon", "📰")
-        summary = cat.get("summary", "")
-        if not name or not summary:
+        stories = cat.get("stories", [])
+        if not name or not stories:
+            continue
+        items = []
+        for s in stories:
+            headline = s.get("headline", "").strip()
+            url      = s.get("url", "").strip()
+            if not headline:
+                continue
+            if url:
+                items.append(f'<li><a href="{url}" target="_blank" class="ai-link">{headline}</a></li>')
+            else:
+                items.append(f'<li>{headline}</li>')
+        if not items:
             continue
         divider = '<hr class="ai-divider">' if i > 0 else ""
         sections.append(
             f'{divider}'
             f'<div class="ai-cat-section">'
             f'<h3 class="ai-cat-h3">{icon} {name}</h3>'
-            f'<p class="ai-briefing">{_md_links_to_html(summary)}</p>'
+            f'<ul class="ai-story-list">{"".join(items)}</ul>'
             f'</div>'
         )
 
@@ -878,6 +890,13 @@ def to_html(
   .ai-divider {{ border: none; border-top: 1px solid #f0f0f0; margin: 4px 0 0; }}
   .ai-grid-card .ai-briefing {{ background: transparent; border-left: none;
                                  padding: 0; border-radius: 0; }}
+  .ai-story-list {{ list-style: none; padding: 0; margin: 0;
+                    display: flex; flex-direction: column; gap: 5px; }}
+  .ai-story-list li {{ font-size: 0.9em; line-height: 1.4; padding-left: 10px;
+                       border-left: 2px solid #e8e8e8; }}
+  .ai-story-list li:hover {{ border-left-color: #8b0000; }}
+  .ai-story-list .ai-link {{ color: #1a1a2e; text-decoration: none; font-weight: 500; }}
+  .ai-story-list .ai-link:hover {{ color: #8b0000; text-decoration: underline; }}
   .major-list {{ list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 10px; }}
   .major-item {{ display: flex; gap: 10px; align-items: flex-start; }}
   .major-text {{ flex: 1; }}
