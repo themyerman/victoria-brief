@@ -763,7 +763,6 @@ def to_html(
     trail_data: Optional[dict] = None,
     bike_counts: Optional[dict] = None,
     marine_forecast: Optional[dict] = None,
-    ai_events: str = "",
     ai_grid: list = [],
     entities: Optional[dict] = None,
     photos: Optional[list] = None,
@@ -771,8 +770,10 @@ def to_html(
     today = datetime.now().strftime("%A, %B %-d, %Y")
 
     major        = _major_stories_section(major_stories or [], photo_list=photos, ai_briefing=ai_briefing)
-    grid         = _ai_news_grid(ai_grid) if ai_grid else _flat_grid(sources, categories, top_n)
-    events_html  = _events_section(sources, categories, ai_events=ai_events)
+    if ai_grid:
+        grid = _ai_news_grid(ai_grid)
+    else:
+        grid = _flat_grid(sources, categories, top_n) + _events_section(sources, categories)
     weather_html = _weather_widget(forecast or [], sun=sun or {}, aqhi=aqhi or {})
     coastal_html = _coastal_strip(
         tides or [], ferries or [],
@@ -1028,7 +1029,6 @@ def to_html(
 {weather_html}
 {major}
 {grid}
-{events_html}
 {coastal_html}
 {ner_html}
 

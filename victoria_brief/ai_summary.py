@@ -128,9 +128,9 @@ def generate_news_grid(
 
     # Seed with known category names so output matches our headers
     known_cats = [
-        "BC News", "Victoria & Island", "Indigenous",
-        "Jobs & Economy", "Arts & Culture", "Education",
-        "Housing & Transit", "Other"
+        "Victoria & Island", "BC News", "Indigenous",
+        "Events & Community", "Arts & Culture", "Jobs & Economy",
+        "Housing & Transit", "Education", "Other"
     ]
 
     prompt = f"""Today is {today}. You are organizing a morning news brief for Victoria, BC.
@@ -153,6 +153,7 @@ Respond with valid JSON only, exactly this format:
 {{
   "categories": [
     {{"name": "Victoria & Island", "icon": "🏙️", "summary": "The [Downtown cycling plan](https://url) moves to council while [new housing](https://url) breaks ground in Langford."}},
+    {{"name": "Events & Community", "icon": "📅", "summary": "..."}},
     {{"name": "BC News", "icon": "🏔️", "summary": "..."}}
   ]
 }}

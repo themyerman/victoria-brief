@@ -92,17 +92,11 @@ def main() -> None:
     print("Generating AI briefing...")
     briefing = ai_summary.generate_briefing(major)
 
-    # Collect event items for AI summary
-    event_items = [
-        item
-        for name, items in event_sources.items()
-        for item in items
-        if categories.get(name) == "Events"
-    ]
-    events_summary = ai_summary.generate_events_summary(event_items)
+    # Merge events into the sources dict so they appear as a category in the AI grid
+    all_for_grid = {**processed, **event_sources}
 
     print("Generating AI news grid...")
-    ai_grid = ai_summary.generate_news_grid(processed, categories)
+    ai_grid = ai_summary.generate_news_grid(all_for_grid, categories)
 
     print("Fetching thumbnails...")
     processed = thumbnails.enrich(processed, top_n=3)
@@ -149,7 +143,6 @@ def main() -> None:
         all_sources,
         major_stories=major,
         ai_briefing=briefing,
-        ai_events=events_summary,
         ai_grid=ai_grid,
         top_n=3,
         categories=categories,
