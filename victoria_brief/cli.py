@@ -50,15 +50,14 @@ def main() -> None:
         for name, items in processed.items()
         if categories.get(name) in BYPASS_CATS
     }
-    processed = {
+    news_sources = {
         name: items
         for name, items in processed.items()
         if categories.get(name) not in BYPASS_CATS
     }
 
-    # Limit grid to 6 named cards.
-    # Two-pass: pinned sources are reserved first, then gravity-sorted
-    # sources fill remaining slots, so pinned cards always appear.
+    # Keep all news sources for the AI grid (no card limit — AI sees everything)
+    # Separately build a 6-card subset for the fallback flat grid.
     TOP_CARDS = 6
     MIN_ITEMS = 3
     PINNED = {
@@ -66,24 +65,17 @@ def main() -> None:
         "First Nations — Victoria & Island",
         "Victoria Housing & Real Estate",
     }
-
     top = {}
-    # Pass 1: reserve slots for pinned sources (only if they have items)
     for name in PINNED:
-        if name in processed and processed[name]:
-            top[name] = processed[name]
-
-    # Pass 2: fill remaining slots in gravity order
-    rest_items = []
-    for name, items in processed.items():
+        if name in news_sources and news_sources[name]:
+            top[name] = news_sources[name]
+    for name, items in news_sources.items():
         if name in top:
             continue
         if len(items) >= MIN_ITEMS and len(top) < TOP_CARDS:
             top[name] = items
-        else:
-            rest_items.extend(items)
 
-    processed = top
+    processed = top  # used for major stories + fallback flat grid
 
     major = find_major_stories(processed, min_sources=2, max_stories=5, similarity_threshold=0.25)
     major = fill_major_stories(major, processed, fill_to=5)
@@ -92,8 +84,8 @@ def main() -> None:
     print("Generating AI briefing...")
     briefing = ai_summary.generate_briefing(major)
 
-    # Merge events into the sources dict so they appear as a category in the AI grid
-    all_for_grid = {**processed, **event_sources}
+    # AI grid sees ALL news sources (not the 6-card limit) + all events
+    all_for_grid = {**news_sources, **event_sources}
 
     print("Generating AI news grid...")
     ai_grid = ai_summary.generate_news_grid(all_for_grid, categories)

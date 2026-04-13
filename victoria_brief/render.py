@@ -693,27 +693,34 @@ def _events_section(
 # ---------------------------------------------------------------------------
 
 def _ai_news_grid(ai_categories: list[dict]) -> str:
-    """Render AI-generated topic sections with inline-linked summaries."""
+    """Render all AI topic categories inside a single unified card."""
     if not ai_categories:
         return ""
 
     sections = []
-    for cat in ai_categories:
+    for i, cat in enumerate(ai_categories):
         name    = cat.get("name", "")
         icon    = cat.get("icon", "📰")
         summary = cat.get("summary", "")
         if not name or not summary:
             continue
+        divider = '<hr class="ai-divider">' if i > 0 else ""
         sections.append(
-            f'<section class="ai-cat-section">'
-            f'<h2 class="ai-cat-h2">{icon} {name}</h2>'
+            f'{divider}'
+            f'<div class="ai-cat-section">'
+            f'<h3 class="ai-cat-h3">{icon} {name}</h3>'
             f'<p class="ai-briefing">{_md_links_to_html(summary)}</p>'
-            f'</section>'
+            f'</div>'
         )
 
     if not sections:
         return ""
-    return f'<div class="ai-grid">{"".join(sections)}</div>'
+    return (
+        f'<div class="ai-grid-card">'
+        f'<h2 class="ai-grid-title">📰 Today\'s News &amp; Events</h2>'
+        f'{"".join(sections)}'
+        f'</div>'
+    )
 
 
 def _flat_grid(
@@ -858,12 +865,16 @@ def to_html(
                   border-radius: 0 4px 4px 0; }}
   .ai-link {{ color: #8b0000; font-weight: 600; text-decoration: none; }}
   .ai-link:hover {{ text-decoration: underline; }}
-  .ai-grid {{ display: flex; flex-direction: column; gap: 18px; margin: 0 0 24px; }}
-  .ai-cat-section {{ background: #fff; border: 1px solid #e0e0e0; border-radius: 6px; padding: 14px 16px; }}
-  .ai-cat-h2 {{ margin: 0 0 8px; font-size: 0.85em; text-transform: uppercase;
-                letter-spacing: 0.06em; color: #8b0000; }}
-  .ai-cat-section .ai-briefing {{ background: transparent; border-left: none;
-                                   padding: 0; border-radius: 0; }}
+  .ai-grid-card {{ background: #fff; border: 1px solid #e0e0e0; border-radius: 8px;
+                   padding: 18px 20px; margin: 0 0 20px; }}
+  .ai-grid-title {{ margin: 0 0 14px; font-size: 0.85em; text-transform: uppercase;
+                    letter-spacing: 0.06em; color: #555; }}
+  .ai-cat-section {{ padding: 12px 0 0; }}
+  .ai-cat-h3 {{ margin: 0 0 6px; font-size: 0.8em; text-transform: uppercase;
+                letter-spacing: 0.06em; color: #8b0000; font-weight: 700; }}
+  .ai-divider {{ border: none; border-top: 1px solid #f0f0f0; margin: 4px 0 0; }}
+  .ai-grid-card .ai-briefing {{ background: transparent; border-left: none;
+                                 padding: 0; border-radius: 0; }}
   .major-list {{ list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 10px; }}
   .major-item {{ display: flex; gap: 10px; align-items: flex-start; }}
   .major-text {{ flex: 1; }}

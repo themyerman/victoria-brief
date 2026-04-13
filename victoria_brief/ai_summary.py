@@ -101,11 +101,11 @@ def generate_news_grid(
 
     today = datetime.now().strftime("%A, %B %-d, %Y")
 
-    # Collect top stories across all non-events sources, sorted by score
+    # Collect top stories across all sources, sorted by score
     all_stories = []
     for src_name, items in sources.items():
         cat = categories.get(src_name, "Other")
-        for item in items[:3]:
+        for item in items[:5]:  # up to 5 per source
             title = item.get("title", "")
             link  = item.get("link", "")
             if title and link:
@@ -117,9 +117,9 @@ def generate_news_grid(
                     "score":    item.get("_score", 0),
                 })
 
-    # Sort by score, cap at 50 to stay within token limits
+    # Sort by score, cap at 80 to stay within token limits
     all_stories.sort(key=lambda x: x["score"], reverse=True)
-    all_stories = all_stories[:50]
+    all_stories = all_stories[:80]
 
     lines = []
     for i, s in enumerate(all_stories, 1):
@@ -140,8 +140,9 @@ Group these stories into news categories and write a 2-3 sentence summary for ea
 STRICT RULES — follow exactly:
 1. Use these category names where they fit: {', '.join(known_cats)}
 2. You may create a new category name if stories clearly don't fit any above
-3. Skip categories with fewer than 2 relevant stories
-4. EVERY story you mention MUST be linked inline using markdown: [words](url)
+3. Include every category that has at least 1 story — do not skip thin categories
+4. Write 2-4 sentences per category — more stories = more sentences, be thorough
+5. EVERY story you mention MUST be linked inline using markdown: [words](url)
    - Link natural phrases mid-sentence, NOT "read more" or "click here" at the end
    - EXAMPLE of correct output: "The [Downtown cycling plan](https://url) is moving to council while a [new affordable housing project](https://url) breaks ground in Langford."
    - EXAMPLE of wrong output: "The cycling plan is moving to council. [Read more](https://url)"
@@ -171,7 +172,7 @@ Stories (these are your ONLY source material — use the exact URLs provided):
             json={
                 "model":           _MODEL,
                 "messages":        [{"role": "user", "content": prompt}],
-                "max_tokens":      1200,
+                "max_tokens":      2000,
                 "temperature":     0.4,
                 "response_format": {"type": "json_object"},
             },
