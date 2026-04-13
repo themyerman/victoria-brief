@@ -133,59 +133,105 @@ def generate_news_grid(
         "Housing & Transit", "Education", "Other"
     ]
 
-    prompt = f"""Today is {today}. You are organizing a morning news brief for Victoria, BC.
+    # ── Call 1: categorize stories and lock in URLs (JSON mode, reliable) ──────
+    cat_prompt = f"""Today is {today}. Organize these Victoria BC news stories into categories.
 
-Group these stories into categories. For each category return the relevant stories as objects with a short headline and the exact URL from the input.
+For each category return the stories as objects with a short headline and the EXACT url from the input.
 
 Rules:
 - Use these category names where they fit: {', '.join(known_cats)}
-- You may create a new category if stories clearly don't fit any above
-- Include all categories that have at least 1 story
-- Include as many stories per category as you have — do not limit to 2
-- Deduplicate: if two stories cover the same event, keep only the best one
-- Keep headlines concise (under 12 words) — rewrite if needed, but keep meaning
-- You MUST copy the url field exactly as provided — do not alter or omit it
+- You may create a new category if stories don't fit any above
+- Include all categories with at least 1 story; include all stories per category
+- Deduplicate: one entry per event, keep the best one
+- Keep headlines concise (under 12 words)
+- Copy each url EXACTLY as given — do not change or omit it
 - Pick a relevant emoji icon for each category
 
-Respond with valid JSON only, exactly this format:
-{{
-  "categories": [
-    {{
-      "name": "Victoria & Island",
-      "icon": "🏙️",
-      "stories": [
-        {{"headline": "Lawn bowling clubs open greens to public", "url": "https://..."}},
-        {{"headline": "VicPD launches community policing survey", "url": "https://..."}}
-      ]
-    }}
-  ]
-}}
+Respond with valid JSON only:
+{{"categories": [{{"name": "Victoria & Island", "icon": "🏙️", "stories": [{{"headline": "...", "url": "https://..."}}]}}]}}
 
 Stories:
 {stories_text}"""
 
     try:
-        r = requests.post(
+        r1 = requests.post(
             _API_URL,
-            headers={
-                "Authorization": f"Bearer {token}",
-                "Content-Type":  "application/json",
-            },
+            headers={"Authorization": f"Bearer {token}", "Content-Type": "application/json"},
             json={
-                "model":           _MODEL,
-                "messages":        [{"role": "user", "content": prompt}],
-                "max_tokens":      2000,
-                "temperature":     0.3,
+                "model": _MODEL, "messages": [{"role": "user", "content": cat_prompt}],
+                "max_tokens": 2000, "temperature": 0.2,
                 "response_format": {"type": "json_object"},
             },
             timeout=30,
         )
-        r.raise_for_status()
-        data = json.loads(r.json()["choices"][0]["message"]["content"])
-        return data.get("categories", [])
+        r1.raise_for_status()
+        structured = json.loads(r1.json()["choices"][0]["message"]["content"]).get("categories", [])
     except Exception as exc:
-        print(f"  [warn] AI news grid failed: {exc}", file=sys.stderr)
+        print(f"  [warn] AI news grid (categorize) failed: {exc}", file=sys.stderr)
         return []
+
+    if not structured:
+        return []
+
+    # ── Call 2: write prose paragraphs using the locked-in URLs ─────────────
+    # Build explicit headline→url mapping so the model can't lose a link
+    prose_sections = []
+    for cat in structured:
+        name    = cat.get("name", "")
+        stories = cat.get("stories", [])
+        if not name or not stories:
+            continue
+        story_lines = "\n".join(
+            f'  - "{s["headline"]}" → {s["url"]}'
+            for s in stories if s.get("headline") and s.get("url")
+        )
+        prose_sections.append(f'{name}:\n{story_lines}')
+    prose_input = "\n\n".join(prose_sections)
+
+    prose_prompt = f"""Today is {today}. Write a 2-3 sentence prose paragraph for each news category below about Victoria, BC.
+
+RULES (follow exactly):
+- Every story you mention MUST be linked with markdown: [words](url)
+- Use the exact URL listed next to each story — no exceptions
+- Link natural phrases mid-sentence (e.g. "The [South Island Powwow](url) returns...")
+- Do NOT end sentences with "read more" or "click here"
+- Write only the paragraphs — no headers, no labels, no extra text
+
+Respond with valid JSON:
+{{"categories": [{{"name": "Victoria & Island", "summary": "prose with [inline links](url) here..."}}]}}
+
+Categories and stories (headline → url):
+{prose_input}"""
+
+    try:
+        r2 = requests.post(
+            _API_URL,
+            headers={"Authorization": f"Bearer {token}", "Content-Type": "application/json"},
+            json={
+                "model": _MODEL, "messages": [{"role": "user", "content": prose_prompt}],
+                "max_tokens": 2000, "temperature": 0.6,
+                "response_format": {"type": "json_object"},
+            },
+            timeout=30,
+        )
+        r2.raise_for_status()
+        prose_cats = json.loads(r2.json()["choices"][0]["message"]["content"]).get("categories", [])
+    except Exception as exc:
+        print(f"  [warn] AI news grid (prose) failed: {exc}", file=sys.stderr)
+        prose_cats = []
+
+    # Merge prose summaries back onto the structured categories
+    prose_by_name = {c["name"]: c.get("summary", "") for c in prose_cats}
+    result = []
+    for cat in structured:
+        name = cat.get("name", "")
+        result.append({
+            "name":    name,
+            "icon":    cat.get("icon", "📰"),
+            "summary": prose_by_name.get(name, ""),
+            "stories": cat.get("stories", []),  # fallback if prose failed
+        })
+    return result
 
 
 def generate_briefing(stories: list[dict]) -> str:

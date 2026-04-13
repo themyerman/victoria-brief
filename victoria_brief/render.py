@@ -704,23 +704,25 @@ def _ai_news_grid(ai_categories: list[dict]) -> str:
     for i, cat in enumerate(ai_categories):
         name    = cat.get("name", "")
         icon    = cat.get("icon", "📰")
+        summary = cat.get("summary", "").strip()
         stories = cat.get("stories", [])
-        if not name or not stories:
+        if not name:
             continue
-        # Build a flowing paragraph of inline links separated by " — "
-        parts = []
-        for s in stories:
-            headline = s.get("headline", "").strip()
-            url      = s.get("url", "").strip()
-            if not headline:
-                continue
-            if url:
-                parts.append(f'<a href="{url}" target="_blank" class="ai-link">{headline}</a>')
-            else:
-                parts.append(headline)
-        if not parts:
+
+        if summary:
+            # Preferred: AI-written prose with inline markdown links
+            para = _md_links_to_html(summary)
+        elif stories:
+            # Fallback: guaranteed linked headlines joined naturally
+            parts = []
+            for s in stories:
+                h = s.get("headline", "").strip()
+                u = s.get("url", "").strip()
+                parts.append(f'<a href="{u}" target="_blank" class="ai-link">{h}</a>' if u else h)
+            para = " &mdash; ".join(parts) + "."
+        else:
             continue
-        para = ' &mdash; '.join(parts) + '.'
+
         divider = '<hr class="ai-divider">' if i > 0 else ""
         sections.append(
             f'{divider}'
