@@ -86,8 +86,11 @@ def _major_stories_section(
     photos_html = _photos_panel(photo_list or [])
 
     if ai_briefing:
-        # Show only the AI paragraph with inline links — no headline list
-        briefing_html = f'<p class="ai-briefing">{_md_links_to_html(ai_briefing)}</p>'
+        # One <p> per theme paragraph — AI separates themes with blank lines
+        paras = [p.strip() for p in ai_briefing.split("\n\n") if p.strip()]
+        briefing_html = "".join(
+            f'<p class="ai-briefing">{_md_links_to_html(p)}</p>' for p in paras
+        )
         return f"""<section class="major-section">
   <div class="major-inner">
     <div class="major-stories-col">

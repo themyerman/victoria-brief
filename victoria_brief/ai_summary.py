@@ -219,14 +219,15 @@ def generate_briefing(stories: list[dict]) -> str:
 
     stories_text = "\n".join(lines)
 
-    prompt = f"""Today is {today}. Write a 2-3 sentence morning news paragraph for someone in Victoria, BC.
+    prompt = f"""Today is {today}. Write a short morning news briefing for someone in Victoria, BC.
 
 Rules:
+- Group the stories into themes (e.g. local politics, environment, economy)
+- Write one short paragraph (1-3 sentences) per theme, separated by a blank line
 - Every story you mention MUST be hyperlinked using markdown: [words](url)
 - Link natural phrases mid-sentence — NOT "click here" or "read more" at the end
-- Example of correct style: "The city is moving forward with [new zoning changes](https://example.com) while [BC Ferries warns of delays](https://example.com) this weekend."
-- Weave the stories together naturally, do not list them
-- Write only the paragraph, nothing else
+- Example: "The city is moving forward with [new zoning changes](https://example.com) while [BC Ferries warns of delays](https://example.com) this weekend."
+- Write only the paragraphs, nothing else — no headers, no labels
 
 Stories (use these exact URLs):
 {stories_text}"""
@@ -241,7 +242,7 @@ Stories (use these exact URLs):
             json={
                 "model":      _MODEL,
                 "messages":   [{"role": "user", "content": prompt}],
-                "max_tokens": 350,
+                "max_tokens": 500,
                 "temperature": 0.6,
             },
             timeout=_TIMEOUT,
