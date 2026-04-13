@@ -135,26 +135,29 @@ def generate_news_grid(
 
     prompt = f"""Today is {today}. You are organizing a morning news brief for Victoria, BC.
 
-Group these stories into news categories and write a 2-3 sentence summary for each category that has enough stories.
+Group these stories into news categories and write a 2-3 sentence summary for each category.
 
-Rules:
-- Use these category names where they fit: {', '.join(known_cats)}
-- You may create a new category name if stories clearly don't fit any above
-- Skip categories with fewer than 2 relevant stories
-- Every story you mention in a summary MUST use an inline markdown link: [words](url)
-- Link natural phrases mid-sentence — NOT "read more" or "click here" at end
-- Deduplicate: if two stories cover the same event, mention it once
-- Be concise and direct — no fluff
+STRICT RULES — follow exactly:
+1. Use these category names where they fit: {', '.join(known_cats)}
+2. You may create a new category name if stories clearly don't fit any above
+3. Skip categories with fewer than 2 relevant stories
+4. EVERY story you mention MUST be linked inline using markdown: [words](url)
+   - Link natural phrases mid-sentence, NOT "read more" or "click here" at the end
+   - EXAMPLE of correct output: "The [Downtown cycling plan](https://url) is moving to council while a [new affordable housing project](https://url) breaks ground in Langford."
+   - EXAMPLE of wrong output: "The cycling plan is moving to council. [Read more](https://url)"
+   - If a sentence has no inline link, it is WRONG — rewrite it
+5. Deduplicate: if two stories cover the same event, mention it once with one link
+6. Be concise and factual — no filler phrases
 
-Respond with valid JSON only, in this exact format:
+Respond with valid JSON only, exactly this format:
 {{
   "categories": [
-    {{"name": "Victoria & Island", "icon": "🏙️", "summary": "...inline [linked text](url) here..."}},
+    {{"name": "Victoria & Island", "icon": "🏙️", "summary": "The [Downtown cycling plan](https://url) moves to council while [new housing](https://url) breaks ground in Langford."}},
     {{"name": "BC News", "icon": "🏔️", "summary": "..."}}
   ]
 }}
 
-Stories:
+Stories (these are your ONLY source material — use the exact URLs provided):
 {stories_text}"""
 
     try:

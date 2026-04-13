@@ -2,18 +2,32 @@ name: Victoria Morning Brief
 
 on:
   schedule:
-    # 16:00 UTC = 9 AM PDT (UTC-7) / 8 AM PST (UTC-8)
-    - cron: "0 16 * * *"
+    # 6:00 AM PDT (13:00 UTC) — generate & publish
+    - cron: "0 13 * * *"
+    # 8:00 AM PDT (15:00 UTC) — email notification
+    - cron: "0 15 * * *"
   workflow_dispatch:
+    inputs:
+      send_email:
+        description: "Also send email notification?"
+        type: boolean
+        default: false
 
 permissions:
   contents: write
   models: read
 
+# ─────────────────────────────────────────────────────────────────────────────
+# Job 1: Generate brief and publish to GitHub Pages (runs at 6 AM or on demand)
+# ─────────────────────────────────────────────────────────────────────────────
 jobs:
   build:
+    name: Generate & Publish
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    if: |
+      github.event.schedule == '0 13 * * *' ||
+      github.event_name == 'workflow_dispatch'
 
     steps:
       - name: Checkout
@@ -40,3 +54,55 @@ jobs:
           git add index.html
           git diff --staged --quiet || git commit -m "brief: $(date -u '+%Y-%m-%d')"
           git push
+
+  # ───────────────────────────────────────────────────────────────────────────
+  # Job 2: Email notification (runs at 8 AM or when manually triggered with
+  # send_email=true). Requires repository secrets:
+  #   SMTP_SERVER     — e.g. smtp.gmail.com
+  #   SMTP_PORT       — e.g. 465 (SSL) or 587 (TLS)
+  #   SMTP_USERNAME   — your Gmail/SMTP login
+  #   SMTP_PASSWORD   — app password (not your main password)
+  #   NOTIFY_EMAILS   — comma-separated list, e.g. tom@example.com,friend@example.com
+  #   BRIEF_URL       — public URL of the page, e.g. https://myerman.art/victoria-brief/
+  # ───────────────────────────────────────────────────────────────────────────
+  notify:
+    name: Email Notification
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    if: |
+      github.event.schedule == '0 15 * * *' ||
+      (github.event_name == 'workflow_dispatch' && inputs.send_email == true)
+
+    steps:
+      - name: Send email
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: ${{ secrets.SMTP_SERVER }}
+          server_port: ${{ secrets.SMTP_PORT }}
+          username: ${{ secrets.SMTP_USERNAME }}
+          password: ${{ secrets.SMTP_PASSWORD }}
+          to: ${{ secrets.NOTIFY_EMAILS }}
+          from: Victoria Morning Brief <${{ secrets.SMTP_USERNAME }}>
+          subject: "☀️ Victoria Morning Brief — ${{ github.run_started_at }}"
+          html_body: |
+            <html><body style="font-family:sans-serif;max-width:600px;margin:0 auto;padding:24px;color:#222;">
+              <div style="background:#1a1a2e;color:#fff;padding:16px 20px;border-radius:8px;margin-bottom:20px;">
+                <h1 style="margin:0 0 4px;font-size:1.3em;">☀️ Victoria Morning Brief</h1>
+                <p style="margin:0;color:#aaa;font-size:0.85em;">Your daily digest is ready</p>
+              </div>
+              <p style="font-size:1em;line-height:1.6;">
+                Good morning! Today's Victoria Morning Brief has been published and includes the latest
+                news, events, ferry status, tides, whale sightings, and weather for the Victoria area.
+              </p>
+              <p style="text-align:center;margin:28px 0;">
+                <a href="${{ secrets.BRIEF_URL }}"
+                   style="background:#8b0000;color:#fff;padding:12px 28px;border-radius:6px;
+                          text-decoration:none;font-weight:700;font-size:1em;">
+                  Read Today's Brief →
+                </a>
+              </p>
+              <p style="font-size:0.8em;color:#888;border-top:1px solid #eee;padding-top:12px;margin-top:20px;">
+                Generated automatically by victoria-brief.
+                To unsubscribe, remove your address from the NOTIFY_EMAILS secret.
+              </p>
+            </body></html>
