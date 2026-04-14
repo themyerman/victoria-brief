@@ -4,8 +4,8 @@ on:
   schedule:
     # 6:00 AM PDT (13:00 UTC) — generate & publish
     - cron: "0 13 * * *"
-    # 8:00 AM PDT (15:00 UTC) — email notification
-    - cron: "0 15 * * *"
+    # 6:30 AM PDT (13:30 UTC) — email notification (build is always done by then)
+    - cron: "30 13 * * *"
   workflow_dispatch:
     inputs:
       send_email:
@@ -69,12 +69,9 @@ jobs:
     name: Email Notification
     runs-on: ubuntu-latest
     timeout-minutes: 5
-    needs: build
     if: |
-      always() && (
-        github.event.schedule == '0 15 * * *' ||
-        (github.event_name == 'workflow_dispatch' && inputs.send_email == true)
-      )
+      github.event.schedule == '30 13 * * *' ||
+      (github.event_name == 'workflow_dispatch' && inputs.send_email == true)
 
     steps:
       - name: Send email
