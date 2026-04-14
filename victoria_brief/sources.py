@@ -91,10 +91,11 @@ def fetch_rss(url: str, hours: int = 26) -> list[dict]:
         seen = set()
         for entry in parsed.entries:
             pub = entry.get("published_parsed") or entry.get("updated_parsed")
-            if pub:
-                pub_dt = datetime(*pub[:6], tzinfo=timezone.utc)
-                if pub_dt < cutoff:
-                    continue
+            if not pub:
+                continue  # drop undated items — they're often stale reposts
+            pub_dt = datetime(*pub[:6], tzinfo=timezone.utc)
+            if pub_dt < cutoff:
+                continue
             link = entry.get("link", "")
             if link in seen:
                 continue

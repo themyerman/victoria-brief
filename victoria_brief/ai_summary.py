@@ -141,6 +141,7 @@ RULES:
 - Use these category names: {', '.join(known_cats)}. Create a new name only if nothing fits.
 - Include every category that has stories; deduplicate (one entry per event)
 - The summary MUST read as natural prose — not a list
+- ONLY use facts from the provided stories — do not add background, context, or knowledge from your training data
 - Every story you mention in the summary MUST be linked using markdown: [phrase](url)
   - Link a natural phrase mid-sentence: "The [Esquimalt Nation sues for Hatley Park](url) while..."
   - NOT at the end: "...Hatley Park. [Read more](url)" ← WRONG
@@ -221,6 +222,7 @@ def generate_briefing(stories: list[dict]) -> str:
 Rules:
 - Group the stories into themes (e.g. local politics, environment, economy)
 - Write one short paragraph (1-3 sentences) per theme, separated by a blank line
+- ONLY use facts stated in the provided stories — do not add background or context from your training data
 - Every story you mention MUST be hyperlinked using markdown: [words](url)
 - Link natural phrases mid-sentence — NOT "click here" or "read more" at the end
 - Example: "The city is moving forward with [new zoning changes](https://example.com) while [BC Ferries warns of delays](https://example.com) this weekend."
