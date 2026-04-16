@@ -90,9 +90,24 @@ sources:
     weight: 1.1
     category: "Jobs & Economy"
 
+  - name: "Times Colonist Business"
+    url: "https://www.timescolonist.com/rss/business"
+    weight: 1.2
+    category: "Jobs & Economy"
+
   - name: "Douglas Magazine"
     url: "https://douglasmagazine.com/feed/"
     weight: 1.0
+    category: "Victoria & Island"
+
+  - name: "Sooke News Mirror"
+    url: "https://www.sookenewsmirror.com/feed/"
+    weight: 0.9
+    category: "Victoria & Island"
+
+  - name: "Nanaimo News Bulletin"
+    url: "https://www.nanaimobulletin.com/feed/"
+    weight: 0.8
     category: "Victoria & Island"
 
   # --- Tech & Jobs ---
@@ -105,6 +120,12 @@ sources:
     search: "Victoria BC OR Vancouver Island hiring jobs 2026 -site:ziprecruiter.com -site:indeed.com -site:linkedin.com -site:glassdoor.com"
     weight: 0.9
     category: "Jobs & Economy"
+
+  # --- Opinion ---
+  - name: "Times Colonist Opinion"
+    url: "https://www.timescolonist.com/rss/opinion"
+    weight: 0.9
+    category: "Victoria & Island"
 
   # --- Arts & Culture ---
   - name: "BC Arts Council"
