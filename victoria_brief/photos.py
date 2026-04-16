@@ -3,6 +3,7 @@ from __future__ import annotations
 import random
 import re
 import sys
+from datetime import datetime, timedelta, timezone
 
 # Nature/landscape focused tag searches for Victoria BC & Vancouver Island.
 # tagmode=all requires ALL listed tags to be present — much more targeted.
@@ -83,6 +84,7 @@ def fetch_photos(n: int = 4) -> list[dict]:
 
     feeds = _FEEDS.copy()
     random.shuffle(feeds)
+    cutoff = datetime.now(timezone.utc) - timedelta(days=15)
 
     # Gather candidates from as many feeds as needed, one per feed for variety
     candidates: list[dict] = []
@@ -95,6 +97,12 @@ def fetch_photos(n: int = 4) -> list[dict]:
             entries = [e for e in parsed.entries[:20] if _image_url(e)]
             random.shuffle(entries)
             for entry in entries:
+                # Skip photos older than 15 days
+                pub = entry.get("published_parsed") or entry.get("updated_parsed")
+                if pub:
+                    pub_dt = datetime(*pub[:6], tzinfo=timezone.utc)
+                    if pub_dt < cutoff:
+                        continue
                 p = _entry_to_dict(entry)
                 if p["url"] and p["url"] not in seen_urls:
                     seen_urls.add(p["url"])
