@@ -47,6 +47,18 @@ limits immediately (10 req/day). `gpt-4o` works but burns the daily quota fast.
 `sources.py` drops any RSS entry with no `published_parsed` or `updated_parsed`.
 Undated items bypass the 26-hour cutoff and can be years old.
 
+### Black Press feeds recycle old articles with fresh pubDates
+The Black Press group (Saanich News, Oak Bay News, Goldstream Gazette, Peninsula
+News Review, Sooke News Mirror, Nanaimo Bulletin, Victoria News) sometimes
+republishes old articles stamped with today's `pubDate`. The date check passes
+but the article is years old. Fix: `_url_year_is_stale()` in `sources.py` checks
+the URL path for embedded years (e.g. `/2021/`) and drops anything more than
+1 year old regardless of `pubDate`.
+
+### Flickr photos: 15-day recency filter
+`photos.py` filters Flickr entries older than 15 days using `published_parsed`.
+Without this, Flickr feeds can surface photos from years ago.
+
 ### AI sees all sources, flat grid sees 6
 `cli.py` splits news sources into two sets:
 - `news_sources` — all non-events sources (fed to AI grid, no limit)
@@ -55,8 +67,22 @@ Events bypass both limits via `BYPASS_CATS = {"Events"}`.
 
 ### Token budget
 - `generate_briefing`: 500 max_tokens
-- `generate_news_grid`: 2500 max_tokens
+- `generate_news_grid`: 2500 max_tokens, sends up to 80 stories
+- Actual prompt is ~4,700 tokens against 128k context — loads of headroom
 - GitHub Models free tier: ~150 req/day shared across all repos
+- Each brief run uses 2 API calls (briefing + news grid)
+
+### Current sources (29 total, ~150 items/day)
+**Victoria & Island:** CHEK, Times Colonist, Victoria News, Victoria Buzz,
+Saanich News, Oak Bay News, Goldstream Gazette, Peninsula News Review,
+Sooke News Mirror, Nanaimo Bulletin, Douglas Magazine, TC Opinion
+**BC News:** CBC BC, BC Government News, Global News BC
+**Indigenous:** APTN, CBC Indigenous, First Nations search
+**Jobs & Economy:** Business Examiner VI, TC Business, BC Tech search, VI Jobs search
+**Arts & Culture:** BC Arts Council search
+**Events:** Victoria Buzz Events, TC Entertainment, Indigenous Events search
+**Education:** UVic News
+**Housing & Transit:** BC Ferries search, Victoria Housing search
 
 ## Publishing
 
