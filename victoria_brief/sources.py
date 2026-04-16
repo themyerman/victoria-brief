@@ -79,6 +79,20 @@ def _clean_title(text: str) -> str:
 _RSS_UA = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36"
 
 
+_CURRENT_YEAR = datetime.now(timezone.utc).year
+_STALE_URL_RE = re.compile(r'/(\d{4})/', )
+
+
+def _url_year_is_stale(link: str) -> bool:
+    """Return True if the URL contains a year that is more than 1 year old."""
+    m = _STALE_URL_RE.search(link)
+    if m:
+        year = int(m.group(1))
+        if 2000 <= year < _CURRENT_YEAR - 1:
+            return True
+    return False
+
+
 def fetch_rss(url: str, hours: int = 26) -> list[dict]:
     cutoff = datetime.now(timezone.utc) - timedelta(hours=hours)
     items = []
@@ -97,6 +111,8 @@ def fetch_rss(url: str, hours: int = 26) -> list[dict]:
             if pub_dt < cutoff:
                 continue
             link = entry.get("link", "")
+            if _url_year_is_stale(link):
+                continue  # URL contains an old year — feed is recycling old content
             if link in seen:
                 continue
             seen.add(link)
