@@ -55,8 +55,33 @@ sources:
     weight: 1.4
     category: "Victoria & Island"
 
+  - name: "Victoria News"
+    url: "https://vicnews.com/feed/"
+    weight: 1.2
+    category: "Victoria & Island"
+
   - name: "Victoria Buzz"
     url: "https://victoriabuzz.com/feed/"
+    weight: 1.0
+    category: "Victoria & Island"
+
+  - name: "Saanich News"
+    url: "https://saanichnews.com/feed/"
+    weight: 1.1
+    category: "Victoria & Island"
+
+  - name: "Oak Bay News"
+    url: "https://oakbaynews.com/feed/"
+    weight: 1.0
+    category: "Victoria & Island"
+
+  - name: "Goldstream News Gazette"
+    url: "https://goldstreamgazette.com/feed/"
+    weight: 1.0
+    category: "Victoria & Island"
+
+  - name: "Peninsula News Review"
+    url: "https://peninsulanewsreview.com/feed/"
     weight: 1.0
     category: "Victoria & Island"
 
