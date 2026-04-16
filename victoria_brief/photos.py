@@ -84,20 +84,23 @@ def fetch_photos(n: int = 4) -> list[dict]:
 
     feeds = _FEEDS.copy()
     random.shuffle(feeds)
-    cutoff = datetime.now(timezone.utc) - timedelta(days=15)
+    cutoff = datetime.now(timezone.utc) - timedelta(days=30)
 
-    # Gather candidates from as many feeds as needed, one per feed for variety
+    # Gather candidates: up to 3 per feed for variety, stop when we have 3×n
     candidates: list[dict] = []
     seen_urls: set[str] = set()
     for feed_url in feeds:
-        if len(candidates) >= n * 2:
+        if len(candidates) >= n * 3:
             break
         try:
             parsed = feedparser.parse(feed_url)
             entries = [e for e in parsed.entries[:20] if _image_url(e)]
             random.shuffle(entries)
+            per_feed = 0
             for entry in entries:
-                # Skip photos older than 15 days
+                if per_feed >= 3:
+                    break
+                # Skip photos older than 30 days
                 pub = entry.get("published_parsed") or entry.get("updated_parsed")
                 if pub:
                     pub_dt = datetime(*pub[:6], tzinfo=timezone.utc)
@@ -107,7 +110,7 @@ def fetch_photos(n: int = 4) -> list[dict]:
                 if p["url"] and p["url"] not in seen_urls:
                     seen_urls.add(p["url"])
                     candidates.append(p)
-                    break
+                    per_feed += 1
         except Exception as exc:
             print(f"  [warn] Flickr feed failed: {exc}", file=sys.stderr)
 

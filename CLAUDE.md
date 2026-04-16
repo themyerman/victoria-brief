@@ -55,9 +55,11 @@ but the article is years old. Fix: `_url_year_is_stale()` in `sources.py` checks
 the URL path for embedded years (e.g. `/2021/`) and drops anything more than
 1 year old regardless of `pubDate`.
 
-### Flickr photos: 15-day recency filter
-`photos.py` filters Flickr entries older than 15 days using `published_parsed`.
-Without this, Flickr feeds can surface photos from years ago.
+### Flickr photos: 30-day recency filter, up to 3 per feed
+`photos.py` filters Flickr entries older than 30 days using `published_parsed`.
+Without this, Flickr feeds can surface photos from years ago. Takes up to 3
+candidates per feed (not 1) so URL validation still leaves enough to fill the
+4-photo slot — 15 days + 1-per-feed was too aggressive and produced only 2 photos.
 
 ### AI sees all sources, flat grid sees 6
 `cli.py` splits news sources into two sets:
