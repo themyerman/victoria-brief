@@ -1,9 +1,6 @@
 name: Victoria Morning Brief
 
 on:
-  schedule:
-    # 6:00 AM PDT (13:00 UTC) — generate, publish, then email
-    - cron: "0 13 * * *"
   workflow_dispatch:
     inputs:
       send_email:
