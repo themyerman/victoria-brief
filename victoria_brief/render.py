@@ -1,11 +1,18 @@
 from __future__ import annotations
 
 from datetime import datetime
+from html import escape as _esc
 from typing import Optional
 
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
+
+
+def _safe_url(url: str) -> str:
+    """Return url only if it uses http(s); else return '' to prevent injection."""
+    s = (url or "").strip()
+    return s if s.startswith(("https://", "http://")) else ""
 
 def _rel_time(published) -> str:
     if not published:
@@ -53,9 +60,9 @@ def _photos_panel(photo_list: list) -> str:
         author = p.get("author", "")
         if not url:
             continue
-        img = f'<img class="pgrid-img" src="{url}" alt="{title}" onerror="this.closest(\'.pgrid-cell\').style.display=\'none\'">'
-        wrapped = f'<a href="{link}" target="_blank">{img}</a>' if link else img
-        credit = f'<span class="pgrid-credit">📷 {author}</span>' if author else ""
+        img = f'<img class="pgrid-img" src="{_safe_url(url)}" alt="{_esc(title)}" onerror="this.closest(\'.pgrid-cell\').style.display=\'none\'">'
+        wrapped = f'<a href="{_safe_url(link)}" target="_blank">{img}</a>' if link else img
+        credit = f'<span class="pgrid-credit">📷 {_esc(author)}</span>' if author else ""
         cells.append(f'<div class="pgrid-cell">{wrapped}{credit}</div>')
     if not cells:
         return ""
@@ -66,13 +73,13 @@ def _photos_panel(photo_list: list) -> str:
 
 
 def _md_links_to_html(text: str) -> str:
-    """Convert markdown [text](url) links to HTML anchor tags."""
+    """Convert markdown [text](url) links to HTML anchor tags.
+    Link text is HTML-escaped; URLs are already restricted to https? by the regex.
+    """
     import re
-    return re.sub(
-        r'\[([^\]]+)\]\((https?://[^\)]+)\)',
-        r'<a href="\2" target="_blank" class="ai-link">\1</a>',
-        text,
-    )
+    def _replace(m: "re.Match[str]") -> str:
+        return f'<a href="{m.group(2)}" target="_blank" class="ai-link">{_esc(m.group(1))}</a>'
+    return re.sub(r'\[([^\]]+)\]\((https?://[^\)]+)\)', _replace, text)
 
 
 def _major_stories_section(
@@ -110,7 +117,7 @@ def _major_stories_section(
         count = s.get("source_count", 0)
         promoted = s.get("promoted", False)
         sources_str = " &middot; ".join(s.get("sources", []))
-        anchor = f'<a href="{link}">{title}</a>' if link else title
+        anchor = f'<a href="{_safe_url(link)}">{_esc(title)}</a>' if link else _esc(title)
         if promoted:
             badge = '<span class="badge badge-promoted">&#9889; Top Story</span>'
         else:
@@ -149,19 +156,19 @@ def _source_card(name: str, items: list[dict], top_n: int = 3, category: str = "
         link = item.get("link", "")
         summary = (item.get("summary", "") or "")[:110].strip()
         thumbnail = item.get("thumbnail", "")
-        anchor = f'<a href="{link}">{title}</a>' if link else title
+        anchor = f'<a href="{_safe_url(link)}">{_esc(title)}</a>' if link else _esc(title)
         age = _rel_time(item.get("published"))
         age_html = f'<span class="age">{age}</span>' if age else ""
-        thumb_html = f'<img class="thumb" src="{thumbnail}" alt="">' if thumbnail else ""
-        snippet = f"<p class='snip'>{summary}</p>" if summary else ""
+        thumb_html = f'<img class="thumb" src="{_safe_url(thumbnail)}" alt="">' if thumbnail else ""
+        snippet = f"<p class='snip'>{_esc(summary)}</p>" if summary else ""
         stories_html.append(f"""<li>
   {thumb_html}
   <strong>{anchor}{age_html}</strong>
   {snippet}
 </li>""")
-    badge = f'<span class="cat-badge">{category}</span>' if category else ""
+    badge = f'<span class="cat-badge">{_esc(category)}</span>' if category else ""
     return f"""<div class="card">
-  <h3><span class="card-source">{name}</span>{badge}</h3>
+  <h3><span class="card-source">{_esc(name)}</span>{badge}</h3>
   <ul>{"".join(stories_html)}</ul>
 </div>"""
 
@@ -204,8 +211,8 @@ def _glance_section(
         hero = max(scored_with_thumb, key=lambda x: x.get("_score", 0))
         hero_link = hero.get("link", "")
         hero_src = hero.get("thumbnail", "")
-        img = f'<img class="glance-hero" src="{hero_src}" alt="">'
-        hero_html = f'<a href="{hero_link}" class="glance-hero-wrap">{img}</a>' if hero_link else img
+        img = f'<img class="glance-hero" src="{_safe_url(hero_src)}" alt="">'
+        hero_html = f'<a href="{_safe_url(hero_link)}" class="glance-hero-wrap">{img}</a>' if hero_link else img
 
     # Build category groups: [(cat, [item, ...]), ...]
     groups = []
@@ -244,8 +251,8 @@ def _glance_section(
             for idx, item in enumerate(picks):
                 title = _truncate(item.get("title", "").strip())
                 link = item.get("link", "")
-                anchor = f'<a href="{link}">{title}</a>' if link else title
-                badge = f'<span class="glance-cat">{cat}</span>' if idx == 0 else '<span class="glance-indent"></span>'
+                anchor = f'<a href="{_safe_url(link)}">{_esc(title)}</a>' if link else _esc(title)
+                badge = f'<span class="glance-cat">{_esc(cat)}</span>' if idx == 0 else '<span class="glance-indent"></span>'
                 rows.append(f'<li>{badge}{anchor}</li>')
         return f'<ul class="glance-list">{"".join(rows)}</ul>'
 
@@ -671,10 +678,10 @@ def _events_section(
         summary   = (item.get("summary", "") or "")[:160].strip()
         thumbnail = item.get("thumbnail", "")
         age       = _rel_time(item.get("published"))
-        anchor    = f'<a href="{link}" target="_blank">{title}</a>' if link else title
+        anchor    = f'<a href="{_safe_url(link)}" target="_blank">{_esc(title)}</a>' if link else _esc(title)
         age_html  = f'<span class="age">{age}</span>' if age else ""
-        thumb_html = f'<img class="thumb" src="{thumbnail}" alt="">' if thumbnail else ""
-        snip_html  = f'<p class="snip">{summary}</p>' if summary else ""
+        thumb_html = f'<img class="thumb" src="{_safe_url(thumbnail)}" alt="">' if thumbnail else ""
+        snip_html  = f'<p class="snip">{_esc(summary)}</p>' if summary else ""
         cards.append(
             f'<div class="event-card">'
             f'{thumb_html}'
